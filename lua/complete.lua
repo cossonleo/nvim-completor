@@ -12,6 +12,7 @@ local complete = {}
 
 local items = {}
 local anypattern = '[%w_]'
+local ctx = {}
 
 complete.fuzzy_match = function(items, pattern)
 	if pattern:len() == 0 then
@@ -25,6 +26,17 @@ complete.fuzzy_match = function(items, pattern)
 		end
 	end
 	return candicates
+end
+
+local function calc_cur_ctx()
+	local buf = vim.api.nvim_get_current_buf()
+	local ft = vim.api.nvim_buf_get_option(buf, 'filetype')
+	local win = vim.api.nvim_get_current_win()
+	local curpos = vim.api.nvim_call_function('getcurpos', {}) -- 带前面的特殊符
+-- nvim_win_get_cursor() 不带前面的特殊
+	local curpos = vim.api.nvim_call_function('getline', {curpos[2]})
+
+	local line = vim.api.nvim_get_current_line()
 end
 
 return complete
