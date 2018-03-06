@@ -45,8 +45,10 @@ local function _text_changed()
 	cur_ctx = get_context()
 	if ctx:eq(cur_ctx) == false then
 		ctx = cur_ctx
+	else
+		return 
 	end
-	api.complete(cur_ctx.start, nil)
+	api.complete(cur_ctx.start, items)
 end
 
 complete.text_changed = _text_changed

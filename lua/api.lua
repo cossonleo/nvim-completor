@@ -43,8 +43,7 @@ function api.get_bufname()
 end
 
 function api.complete(start, items)
-	local candi = {'January', 'February', 'March',  'April', 'May', 'June', 'July', 'August', 'September',  'October', 'November', 'December'} 
-	vim.api.nvim_call_function('complete', {start, candi})
+	vim.api.nvim_call_function('complete', {start, items})
 end
 
 api.context = {
