@@ -9,47 +9,46 @@
 
 local util = require("util")
 local api = require("api")
+local fuzzy = require("fuzzy_match")
+local ft = require("ft")
+-- module name
 local complete = {}
 
-local items = {}
-local anypattern = '[%w_]'
-local ctx = {}
+-- 匹配方法
+local fuzzy_match = fuzzy.head_fuzzy_match
 
-local ctx = {}
+local ctx = api.context:new()
 
-function complete.context()
+-- 获取匹配上下文
+local function get_context()
 	local pos = api.get_curpos()
-	local ft = api.get_filetype()
-	local bufname = api.get_bufname()
+	local cur_ctx = api.context:new()
+
+	cur_ctx.bname = api.get_bufname()
+	cur_ctx.bno = pos['buf']
+	cur_ctx.line = pos['line']
+	cur_ctx.ft = api.get_filetype()
+	cur_ctx.typed = api.cursor_pre_content()
+	cur_ctx.start = util.last_word_start(cur_ctx.typed)
+
+	return cur_ctx
+end
+
+local function _text_changed()
 	local pre_input = api.cursor_pre_content()
-	local start = util.last_word_start(pre_input)
-	local lctx = {bname=bufname, bno=pos["buf"], line=pos["line"], ft=ft, typed=pre_input, start=start}
-	return lctx
-end
-
-complete.fuzzy_match = function(items, pattern)
-	if pattern:len() == 0 then
-		return items
+	local plen = pre_input:len()
+	local lchar = pre_input:sub(plen,plen)
+	if ft.trigger(lchar) == false then
+		return
 	end
 
-	local candicates = {}
-	for i, v in ipairs(items) do
-		if util.head_fuzzy_match(v, pattern) then
-			candicates:insert(v)
-		end
+	cur_ctx = get_context()
+	if ctx:eq(cur_ctx) == false then
+		ctx = cur_ctx
 	end
-	return candicates
+	api.complete(cur_ctx.start, nil)
 end
 
-local function calc_cur_ctx()
-	local buf = vim.api.nvim_get_current_buf()
-	local ft = vim.api.nvim_buf_get_option(buf, 'filetype')
-	local win = vim.api.nvim_get_current_win()
-	local curpos = vim.api.nvim_call_function('getcurpos', {}) -- 带前面的特殊符
--- nvim_win_get_cursor() 不带前面的特殊
-	local curpos = vim.api.nvim_call_function('getline', {curpos[2]})
-
-	local line = vim.api.nvim_get_current_line()
-end
+complete.text_changed = _text_changed
 
 return complete
