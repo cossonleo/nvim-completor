@@ -43,11 +43,16 @@ func! complete#handle_lsp_completion(ctx, data)
 	"echomsg a:data[0]["insertText"]
 	
     if lsp#client#is_error(a:data) || !has_key(a:data, 'response') || !has_key(a:data['response'], 'result')
-		echo "err"
+		--echo "err"
 	else
-		echo "suc"
+		--echo string(a:data)
 	endif
-	lua << EOF
+
+
+	"for key in keys(a:data[0])
+	"   echo key . ': ' . a:data[0][key]
+	"endfor
+
 
 	local ctx = vim.api.nvim_eval('a:ctx')
 	local data = vim.api.nvim_eval('a:data')
