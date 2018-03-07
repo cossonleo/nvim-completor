@@ -84,10 +84,12 @@ function api.context:eq(ctx)
 	if self.ft ~= ctx.ft then
 		return false
 	end
-	if self.typed ~= ctx.typed then
+	if self.start ~= ctx.start then
 		return false
 	end
-	if self.start ~= ctx.start then
+
+	local st = self.start
+	if self.typed:sub(st, st) ~= ctx.typed:sub(st, st) then
 		return false
 	end
 	return true
