@@ -26,6 +26,7 @@ func! complete#on_text_changed()
 EOF
 endfunc
 
+        "\ 'on_notification': function('complete#handle_lsp_completion', [a:ctx]),
 func! complete#lsp_complete(server_name, ctx)
 	"call complete(a:ctx.start, [a:ctx.typed, a:server_name])
     call lsp#send_request(a:server_name, {
@@ -39,11 +40,20 @@ func! complete#lsp_complete(server_name, ctx)
 endfunc
 
 func! complete#handle_lsp_completion(ctx, data)
-	call complete(ctx.start, ["sssssss"])
+	"echomsg a:data[0]["insertText"]
+	
+    if lsp#client#is_error(a:data) || !has_key(a:data, 'response') || !has_key(a:data['response'], 'result')
+		echo "err"
+	else
+		echo "suc"
+	endif
+	lua << EOF
 
-"	lua << EOF
-"	cm = require("complete")
-"	cm.handle_completion(ctx, data)
-"EOF
+	local ctx = vim.api.nvim_eval('a:ctx')
+	local data = vim.api.nvim_eval('a:data')
+
+	local cm = require("complete")
+	cm.handle_completion(cx, dt)
+EOF
 endfunc
 

@@ -93,6 +93,7 @@ local function _handle_completion(ctx, data)
 		end
 	end
 
+
 	local tlen = ctx.typed:len()
 	local pattern = ctx.typed:sub(ctx.start, tlen)
 	if pattern ~= nil and pattern:match('[%w_]+'):len() > 0 then

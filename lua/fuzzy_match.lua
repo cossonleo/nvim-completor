@@ -48,7 +48,7 @@ function fuzzy.head_fuzzy_match(items, pattern)
 
 	local candicates = {}
 	for i, v in ipairs(items) do
-		if v['word'] ~= nil and is_head_match(v['word'], pattern) then
+		if  is_head_match(v['word'], pattern) then
 			candicates:insert(v)
 		end
 	end
