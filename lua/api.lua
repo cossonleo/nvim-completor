@@ -105,4 +105,9 @@ function api.get_whitelist_servers()
 	return vim.api.nvim_call_function('lsp#get_whitelisted_servers', {})
 end
 
+function api.echo_log(str)
+	local e = "echo '" .. str .. "'"
+	vim.api.nvim_command(e)
+end
+
 return api
