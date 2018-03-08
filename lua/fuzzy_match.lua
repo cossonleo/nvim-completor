@@ -1,7 +1,16 @@
+--------------------------------------------------
+--    LICENSE: MIT
+--     Author: Cosson2017
+--    Version: 0.1
+-- CreateTime: 2018-03-08 18:36:13
+-- LastUpdate: 2018-03-08 18:36:28
+--       Desc: 
+--------------------------------------------------
+
 local fuzzy = {}
 
 -- 是否符合首字母模糊匹配
-local function is_head_match(str, pattern)
+local function _is_head_match(str, pattern)
 	slen = str:len()
 	plen = pattern:len()
 	if slen < plen then
@@ -46,9 +55,12 @@ function fuzzy.head_fuzzy_match(items, pattern)
 		return items
 	end
 
+	lp = string.lower(pattern)
+
 	local candicates = {}
 	for i, v in pairs(items) do
-		if  is_head_match(v['word'], pattern) then
+		lw = string.lower(v['word'])
+		if  _is_head_match(lw, lp) then
 			table.insert(candicates, v)
 		end
 	end

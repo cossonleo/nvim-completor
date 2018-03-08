@@ -3,7 +3,7 @@
 --     Author: 
 --    Version: 
 -- CreateTime: 2018-03-04 22:53:58
--- LastUpdate: 2018-03-04 22:53:58
+-- LastUpdate: 2018-03-08 18:36:39
 --       Desc: 
 --------------------------------------------------
 
@@ -50,19 +50,18 @@ local function _direct_completion(old_ctx)
 		local pattern = ctx.typed:sub(ctx.start, tlen)
 		cache = fuzzy_match(items, pattern )
 	end
+
 	api.complete(ctx.start, cache)
 end
 
 local function _handle_completion(ctx, data)
 	items = lsp.format_completion(data)
-	if items == nil then
-		api.echo_log("items is nil")
+	if items == nil or #items == 0 then
 		return
 	end
 
 	cache = items
-	local tlen = ctx.typed:len()
-	if ctx.start <= tlen then 
+	if ctx.start <= #ctx.typed then 
 		local pattern = ctx.typed:sub(ctx.start, tlen)
 		cache = fuzzy_match(items, pattern)
 	end
@@ -70,27 +69,26 @@ local function _handle_completion(ctx, data)
 	api.complete(ctx.start, cache)
 end
 
-local cg = 0
-local ng = 0
 local function _text_changed()
-	local pre_input = api.cursor_pre_content()
-	local plen = pre_input:len()
-	local lchar = pre_input:sub(plen,plen)
+	old = ctx
+	ctx = _get_context()
+
+	len = #ctx.typed
+	if len == 0 then
+		return
+	end
+
+	local lchar = ctx.typed:sub(len,len)
 	if ft.trigger(lchar) == false then
 		return
 	end
 
-	old = ctx
-	ctx = _get_context()
+
 	if ctx:eq(old) == false then
 		items = nil
 		lsp.lsp_complete(ctx)
-		cg = cg + 1
-		print("cg", cg)
 	else
 		_direct_completion(old)	
-		ng = ng + 1
-		print("ng", ng)
 	end
 end
 

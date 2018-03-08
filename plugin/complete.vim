@@ -3,7 +3,7 @@
 "     Author: Cosson2017
 "    Version: 0.1
 " CreateTime: 2018-03-07 12:13:15
-" LastUpdate: 2018-03-07 12:13:15
+" LastUpdate: 2018-03-08 18:36:00
 "       Desc: 
 """"""""""""""""""""""""""""""""""""""""""
 
@@ -17,6 +17,7 @@ setlocal completeopt+=menuone
 setlocal completeopt-=menu
 setlocal completeopt+=noselect
 
+"autocmd TextChangedP * call complete#on_text_changed()
 autocmd TextChangedI * call complete#on_text_changed()
 
 "inoremap <c-n> <C-R>=complete#on_text_changed()<CR>
@@ -28,26 +29,32 @@ EOF
 endfunc
 
 "return { 'line': line('.') - 1, 'character': col('.') -1 }
-"   'position': lsp#get_position(),
+"character: 下标从1开始
 func! complete#lsp_complete(server_name, ctx)
+	" 当输入非[%w_] 字符时 ctx.start 会超前 此时需要矫正
+	let l:start = a:ctx.start
+	let l:len = len(a:ctx.typed)
+	if l:start > l:len
+		let l:start = l:len
+	endif
+
     call lsp#send_request(a:server_name, {
         \ 'method': 'textDocument/completion',
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
-        \   'position': {'line': a:ctx.line - 1, 'character': a:ctx.start - 1},
+        \   'position': {'line': a:ctx.line - 1, 'character': l:start},
         \ },
         \ 'on_notification': function('complete#handle_lsp_completion', [a:ctx]),
         \ })
 endfunc
 
 func! complete#handle_lsp_completion(ctx, data)
-	"echomsg a:data[0]["insertText"]
 	
-    if lsp#client#is_error(a:data) || !has_key(a:data, 'response') || !has_key(a:data['response'], 'result')
-		echo "err"
-	else
-		"echo string(a:data)
-	endif
+"    if lsp#client#is_error(a:data) || !has_key(a:data, 'response') || !has_key(a:data['response'], 'result')
+"		echo "err"
+"	else
+"		echo string(a:data)
+"	endif
 
 lua << EOF
 

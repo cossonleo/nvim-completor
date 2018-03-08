@@ -3,7 +3,7 @@
 --     Author: Cosson2017
 --    Version: 0.1
 -- CreateTime: 2018-03-07 13:17:08
--- LastUpdate: 2018-03-07 13:17:08
+-- LastUpdate: 2018-03-08 18:36:44
 --       Desc: 
 --------------------------------------------------
 
@@ -90,7 +90,6 @@ local function _format_completion(data)
 		local incomplete = result['isIncomplete']
 	end
 
-	--print(#result)
 	local items = {}
 	for k, v in pairs(result) do
 		local item = _format_completion_item(v)

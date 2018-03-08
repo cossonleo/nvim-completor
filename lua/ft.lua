@@ -12,7 +12,7 @@ local ft = {}
 local api = require("api")
 
 local function normal_trigger(str)
-	if str:match('[%w_.]+') ~= nil then
+	if string.match(str, '[%w_.]+') ~= nil then
 		return true
 	end
 
