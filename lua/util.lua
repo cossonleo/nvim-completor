@@ -18,21 +18,14 @@ local function is_word_char(char)
 	return false
 end
 
-local function _last_word_start(str)
-	local len = string.len(str)
-	for i = -1, -1 * len, -1 do
-		if str:sub(i, i) == '.' then
-			return len + i + 2
-		end
-
-		if is_word_char(str:sub(i,i)) == false then
-			return len + i + 2
-		end
+local function _completion_start(str)
+	local start, ed = string.find(str, "[%a_][%w_]*$")
+	if start == nil then
+		return #str + 1
 	end
-	return 1
 end
 
 -- 最后一个key开始的位置
-util.last_word_start = _last_word_start
+util.completion_start = _completion_start
 
 return util

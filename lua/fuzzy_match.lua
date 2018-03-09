@@ -51,6 +51,10 @@ end
 -- @pattern:
 -- return: table
 function fuzzy.head_fuzzy_match(items, pattern)
+	if items == nil or #items == 0 then
+		return
+	end
+
 	if pattern:len() == 0 then
 		return items
 	end

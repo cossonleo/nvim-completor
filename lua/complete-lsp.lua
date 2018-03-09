@@ -64,22 +64,18 @@ end
 
 local function _format_completion(data)
 	if data == nil then
-		api.echo_log("data is nil ")
 		return 
 	end
 
 	if data['error'] ~= nil then
-		api.echo_log("data result error")
 		return
 	end
 	if data['response'] == nil then
-		api.echo_log("response is nil")
 		return
 	end
 
 	local result = data['response']['result']
 	if result == nil then
-		api.echo_log("result is nil")
 		return
 	end
 

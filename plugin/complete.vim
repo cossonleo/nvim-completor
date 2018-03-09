@@ -19,9 +19,28 @@ setlocal completeopt+=noselect
 
 "autocmd TextChangedP * call complete#on_text_changed()
 autocmd TextChangedI * call complete#on_text_changed()
+"autocmd MenuPopup * call complete#on_menupopup()
+"autocmd InsertLeave * call complete#on_insert_leave()
+autocmd InsertEnter * call complete#on_insert_enter()
+
+func! complete#on_insert_leave()
+endfunc
+
+func! complete#on_insert_enter()
+lua << EOF
+	local ft = require("ft")
+	ft.set_ft()
+EOF
+endfunc
+
+func! complete#on_menupopup()
+endfunc
 
 "inoremap <c-n> <C-R>=complete#on_text_changed()<CR>
+let s:count = 0
 func! complete#on_text_changed()
+	let s:count = s:count + 1
+	"echo s:count
 lua << EOF
 	local cm = require("complete")
 	cm.text_changed()
@@ -33,9 +52,8 @@ endfunc
 func! complete#lsp_complete(server_name, ctx)
 	" 当输入非[%w_] 字符时 ctx.start 会超前 此时需要矫正
 	let l:start = a:ctx.start
-	let l:len = len(a:ctx.typed)
-	if l:start > l:len
-		let l:start = l:len
+	if l:start > a:ctx.ed
+		let l:start = a:ctx.ed
 	endif
 
     call lsp#send_request(a:server_name, {
