@@ -19,8 +19,8 @@ local complete = {}
 local fuzzy_match = fuzzy.head_fuzzy_match
 local last_req_ctx = ft.context:new()
 
-local items = {}
-local cache = {}
+local items = nil
+local cache = nil
 local last_pattern = ""
 
 
@@ -48,36 +48,48 @@ local function _get_context()
 end
 
 local function _direct_completion()
-	if items == nil then
+	if items == nil or #items == 0 then
 		return
 	end
 
 	local pos = api.get_curpos()
-	if pos.col <= 1 then
-		return
+	local typed = ""
+
+	if pos.col > 1 then
+		typed = vim.api.nvim_get_current_line():sub(1, pos.col - 1)
 	end
 
-	local typed = vim.api.nvim_get_current_line():sub(1, pos.col - 1)
 	local pattern = string.match(typed, "[%a_][%w_]*$")
 	if pattern == nil then
+		api.complete(last_req_ctx.start, items)
 		return
-	end
-
-	if string.match(pattern, "^" .. last_pattern) ~= nil then
-		if cache ~= nil and #cache > 0 then
-			cache = fuzzy_match(cache, pattern )
-		else
-			cache = fuzzy_match(items, pattern )
-		end
 	else
 		cache = fuzzy_match(items, pattern )
+		api.complete(last_req_ctx.start, cache)
 	end
 
-	last_pattern = pattern
-	if cache == nil then
-		return
-	end
-	api.complete(last_req_ctx.start, cache)
+	--if last_pattern == nil or last_pattern == "" then
+	--	last_pattern = pattern
+	--	cache = fuzzy_match(items, pattern )
+
+	--	api.complete(last_req_ctx.start, cache)
+	--	return
+	--end
+
+	--if cache == nil or #cache == 0 then
+	--	cache = fuzzy_match(items, pattern )
+	--end
+
+	--if string.match(pattern, "^" .. last_pattern) ~= nil then
+	--	cache = fuzzy_match(cache, pattern )
+	--end
+
+	--if #cache == 0 then
+	--	print(5)
+	--	return
+	--end
+	--last_pattern = pattern
+	--api.complete(last_req_ctx.start, cache)
 end
 
 local function _handle_completion(ctx, data)
@@ -87,6 +99,7 @@ local function _handle_completion(ctx, data)
 	end
 
 	cache = items
+	print("completion items find " .. #items)
 
 	api.complete(ctx.start, cache)
 end
@@ -97,25 +110,32 @@ local function _text_changed()
 	end
 
 	local ctx = _get_context()
-
 	len = #ctx.typed
 	if len == 0 then
 		return
 	end
 
-	if ft.trigger_request(ctx.typed) or not ctx:eq(last_req_ctx) then
+	if ctx:eq(last_req_ctx) then
+		_direct_completion()
+	elseif ft.is_request(ctx.typed) then --or not ctx:eq(last_req_ctx) then
 		items = nil
 		cache = nil
 		last_pattern = ""
 		last_req_ctx = ctx
 		lsp.lsp_complete(ctx)
-	else
-		_direct_completion()
 	end
 end
 
+function _reset_default()
+	items = nil
+	cache = nil
+	last_pattern = ""
+	last_req_ctx = ft.context:new()
+end
 
 complete.text_changed = _text_changed
 complete.handle_completion = _handle_completion
+complete.direct_complete = _direct_completion
+complete.reset_default = _reset_default
 
 return complete

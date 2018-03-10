@@ -57,12 +57,16 @@ function _context:eq(ctx)
 	if self.start ~= ctx.start then
 		return false
 	end
-
+	local s = self.typed:sub(self.start, self.start)
+	local c = ctx.typed:sub(self.start, self.start)
+	if s == nil or c == nil or s ~= c then
+		return false
+	end
 	return true
 end
 
 local function _cfamily_trigger(str)
-	if string.match(str, '.$') ~= nil then
+	if string.match(str, '%.$') ~= nil then
 		return true
 	end
 	if string.match(str, '->$') ~= nil then
@@ -75,20 +79,20 @@ local function _cfamily_trigger(str)
 end
 
 local function _lua_trigger(str)
-	if string.match(str, "[.:]$") ~= nil then
+	if string.match(str, "[%.:]$") ~= nil then
 		return true
 	end
 	return false
 end
 
 local function _go_trigger(str)
-	if string.match(str, ".$") ~= nil then
+	if string.match(str, "%.$") ~= nil then
 		return true
 	end
 	return false
 end
 
-local function _trigger_request(str)
+local function _is_request(str)
 	local len = #str
 	if len == 0 then
 		return false
@@ -102,7 +106,7 @@ local function _trigger_request(str)
 	end
 
 
-	st, ed = string.find(str, '[%a_][%w_]*$')
+	local st, ed = string.find(str, '[%a_][%w_]*$')
 
 	-- 语义补全
 	if st == nil then
@@ -145,7 +149,7 @@ local function _set_ft()
 
 end
 
-ft.trigger_request = _trigger_request
+ft.is_request = _is_request
 ft.filetype = _ft
 ft.set_ft = _set_ft
 ft.context = _context

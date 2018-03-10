@@ -17,13 +17,19 @@ setlocal completeopt+=menuone
 setlocal completeopt-=menu
 setlocal completeopt+=noselect
 
-"autocmd TextChangedP * call complete#on_text_changed()
+"autocmd TextChangedP * call complete#on_text_changedp()
 autocmd TextChangedI * call complete#on_text_changed()
 "autocmd MenuPopup * call complete#on_menupopup()
-"autocmd InsertLeave * call complete#on_insert_leave()
+autocmd InsertLeave * call complete#on_insert_leave()
 autocmd InsertEnter * call complete#on_insert_enter()
-
+"autocmd CompleteDone * call complete#on_text_changedp()
+"inoremap <c-n> <C-R>=complete#on_text_changedp()<CR>
+"
 func! complete#on_insert_leave()
+lua << EOF
+	local cm = require("complete")
+	cm.reset_default()
+EOF
 endfunc
 
 func! complete#on_insert_enter()
@@ -36,14 +42,17 @@ endfunc
 func! complete#on_menupopup()
 endfunc
 
-"inoremap <c-n> <C-R>=complete#on_text_changed()<CR>
-let s:count = 0
 func! complete#on_text_changed()
-	let s:count = s:count + 1
-	"echo s:count
 lua << EOF
 	local cm = require("complete")
 	cm.text_changed()
+EOF
+endfunc
+
+func! complete#on_text_changedp()
+lua << EOF
+	local cm = require("complete")
+	cm.direct_complete()
 EOF
 endfunc
 
@@ -75,10 +84,8 @@ func! complete#handle_lsp_completion(ctx, data)
 "	endif
 
 lua << EOF
-
 	local ctx = vim.api.nvim_eval('a:ctx')
 	local data = vim.api.nvim_eval('a:data')
-
 	local cm = require("complete")
 	cm.handle_completion(ctx, data)
 EOF
