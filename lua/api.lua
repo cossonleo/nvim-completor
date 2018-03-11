@@ -11,7 +11,6 @@
 local api = {}
 
 
-
 -- row: 都是从1开始
 -- getcurpos: col 从1开始 符合lua的下标
 -- nvim_win_get_cursor: col 从0开始 
@@ -33,11 +32,12 @@ function api.get_bufname()
 end
 
 function api.complete(start, items)
+	vim.api.nvim_out_write("find match len " .. #items .. '\n')
     vim.api.nvim_call_function('complete', {start, items})
 end
 
 function api.lsp_complete(server_name, ctx)
-	vim.api.nvim_call_function('complete#lsp_complete', {server_name, ctx})
+	vim.api.nvim_call_function('lsp_completor#lsp_complete', {server_name, ctx})
 end
 
 function api.get_whitelist_servers()

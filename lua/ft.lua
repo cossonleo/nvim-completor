@@ -43,23 +43,18 @@ end
 
 function _context:eq(ctx)
 	if self.bname ~= ctx.bname then
-	vim.api.nvim_out_write('eq')
 		return false
 	end
 	if self.bno ~= ctx.bno then 
-	vim.api.nvim_out_write('eq1')
 		return false
 	end
 	if self.line ~= ctx.line then
-	vim.api.nvim_out_write('eq2')
 		return false
 	end
 	if self.filetype ~= ctx.filetype then
-	vim.api.nvim_out_write('eq3')
 		return false
 	end
 	if self.start ~= ctx.start then
-	vim.api.nvim_out_write('eq4')
 		return false
 	end
 	return true

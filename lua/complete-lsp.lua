@@ -102,9 +102,6 @@ local function _lsp_complete(ctx)
 	end
 
 	api.lsp_complete(servers[1], ctx)
-
-	--for k, s in ipairs(servers) do
-	--end
 end
 
 lsp.lsp_complete = _lsp_complete

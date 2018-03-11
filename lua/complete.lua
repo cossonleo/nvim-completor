@@ -17,11 +17,11 @@ local complete = {}
 
 -- 匹配方法
 local fuzzy_match = fuzzy.head_fuzzy_match
-local last_req_ctx = ft.context:new()
 
+local last_req_ctx = ft.context:new()
 local items = nil
 local cache = nil
-local last_pattern = ""
+local last_pattern = nil
 
 
 -- 获取匹配上下文
@@ -56,8 +56,6 @@ local function _direct_completion()
 		return
 	end
 
-	vim.api.nvim_out_write("changedp ")
-
 	local pos = api.get_curpos()
 	local typed = ""
 
@@ -67,15 +65,27 @@ local function _direct_completion()
 
 	local pattern = string.match(typed, "[%a_][%w_]*$")
 	if pattern == nil then
+		last_pattern = nil
+		cache = items
 		api.complete(last_req_ctx.start, items)
-		vim.api.nvim_out_write("items " .. #items .. "\n")
 		return ''
 	else
-		cache = fuzzy_match(items, pattern )
+		if last_pattern == nil or
+			string.match(pattern, "^" .. last_pattern) == nil
+			then
+			last_pattern = pattern
+			cache = fuzzy_match(items, pattern )
+			api.complete(last_req_ctx.start, cache)
+			return ''
+		end
+
+		cache = fuzzy_match(cache, pattern)
+		last_pattern = pattern
 		api.complete(last_req_ctx.start, cache)
-		vim.api.nvim_out_write("cache " .. #cache .. "\n")
 		return ''
 	end
+
+	return ''
 
 	--if last_pattern == nil or last_pattern == "" then
 	--	last_pattern = pattern
@@ -107,15 +117,22 @@ local function _handle_completion(ctx, data)
 		return
 	end
 
+	local ctx = _get_context()
+	if not ctx:eq(last_req_ctx) then
+		last_req_ctx = ft.context:new()
+		cache = nil
+		last_pattern = nil
+		items = nil
+		vim.api.nvim_out_write("complete ctx change\n")
+		return
+	end
 	cache = items
 	vim.api.nvim_out_write("completion items find " .. #items .. "\n")
-
 	api.complete(ctx.start, cache)
 	return ''
 end
 
 local function _text_changed()
-
 	if ft.filetype == nil then
 		return
 	end
@@ -129,7 +146,7 @@ local function _text_changed()
 	if ft.is_request(ctx.typed) then --or not ctx:eq(last_req_ctx) then
 		items = nil
 		cache = nil
-		last_pattern = ""
+		last_pattern = nil
 		last_req_ctx = ctx
 		lsp.lsp_complete(ctx)
 	elseif ctx:eq(last_req_ctx) then
@@ -140,7 +157,7 @@ end
 function _reset_default()
 	items = nil
 	cache = nil
-	last_pattern = ""
+	last_pattern = nil
 	last_req_ctx = ft.context:new()
 end
 
