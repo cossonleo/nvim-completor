@@ -17,14 +17,20 @@ setlocal completeopt+=menuone
 setlocal completeopt-=menu
 setlocal completeopt+=noselect
 
-"autocmd TextChangedP * call complete#on_text_changedp()
+autocmd TextChangedP * call complete#on_text_changedp()
 autocmd TextChangedI * call complete#on_text_changed()
 "autocmd MenuPopup * call complete#on_menupopup()
 autocmd InsertLeave * call complete#on_insert_leave()
 autocmd InsertEnter * call complete#on_insert_enter()
 "autocmd CompleteDone * call complete#on_text_changedp()
-"inoremap <c-n> <C-R>=complete#on_text_changedp()<CR>
-"
+inoremap <c-n> <C-R>=complete#on_manual()<CR>
+
+func! complete#on_manual()
+	call complete(1, ["aa", "bb", "cc", "dd"])
+	call complete(1, ["ee", "gg", "ff", "ii"])
+	return ''
+endfunc
+
 func! complete#on_insert_leave()
 lua << EOF
 	local cm = require("complete")
@@ -42,7 +48,10 @@ endfunc
 func! complete#on_menupopup()
 endfunc
 
+let s:count = 0
 func! complete#on_text_changed()
+	let s:count = s:count + 1
+	echo "changed" . s:count
 lua << EOF
 	local cm = require("complete")
 	cm.text_changed()
@@ -50,6 +59,7 @@ EOF
 endfunc
 
 func! complete#on_text_changedp()
+	echo "changedp"
 lua << EOF
 	local cm = require("complete")
 	cm.direct_complete()

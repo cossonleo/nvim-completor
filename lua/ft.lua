@@ -43,26 +43,35 @@ end
 
 function _context:eq(ctx)
 	if self.bname ~= ctx.bname then
+	vim.api.nvim_out_write('eq')
 		return false
 	end
 	if self.bno ~= ctx.bno then 
+	vim.api.nvim_out_write('eq1')
 		return false
 	end
 	if self.line ~= ctx.line then
+	vim.api.nvim_out_write('eq2')
 		return false
 	end
 	if self.filetype ~= ctx.filetype then
+	vim.api.nvim_out_write('eq3')
 		return false
 	end
 	if self.start ~= ctx.start then
-		return false
-	end
-	local s = self.typed:sub(self.start, self.start)
-	local c = ctx.typed:sub(self.start, self.start)
-	if s == nil or c == nil or s ~= c then
+	vim.api.nvim_out_write('eq4')
 		return false
 	end
 	return true
+	--local s = self.typed:sub(self.start, self.start)
+	--local c = ctx.typed:sub(self.start, self.start)
+	--if s == nil or c == nil or s ~= c then
+	--vim.api.nvim_out_write('s typed ' .. self.typed .. ' ')
+	--vim.api.nvim_out_write('c typed ' .. ctx.typed .. ' ')
+	--	return false
+	--end
+	--vim.api.nvim_out_write('eq6')
+	--return true
 end
 
 local function _cfamily_trigger(str)

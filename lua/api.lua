@@ -33,7 +33,7 @@ function api.get_bufname()
 end
 
 function api.complete(start, items)
-	vim.api.nvim_call_function('complete', {start, items})
+    vim.api.nvim_call_function('complete', {start, items})
 end
 
 function api.lsp_complete(server_name, ctx)
@@ -43,5 +43,21 @@ end
 function api.get_whitelist_servers()
 	return vim.api.nvim_call_function('lsp#get_whitelisted_servers', {})
 end
+
+local function _dic_len(dict)
+	local count = 0
+	for k, v in pairs(dict) do
+		count = count + 1
+	end
+	return count
+end
+
+function api.pumvisible()
+	local pum = vim.api.nvim_call_function('pumvisible', {})
+	local recen = vim.api.nvim_get_vvar('completed_item')
+	return pum ~= 0 and _dic_len(recen) ~= 0
+end
+
+api.dict_len = _dic_len
 
 return api

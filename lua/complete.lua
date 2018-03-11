@@ -48,9 +48,15 @@ local function _get_context()
 end
 
 local function _direct_completion()
-	if items == nil or #items == 0 then
+	if api.pumvisible() then
 		return
 	end
+	if items == nil or #items == 0 then
+		vim.api.nvim_out_write("items is empty \n")
+		return
+	end
+
+	vim.api.nvim_out_write("changedp ")
 
 	local pos = api.get_curpos()
 	local typed = ""
@@ -62,10 +68,13 @@ local function _direct_completion()
 	local pattern = string.match(typed, "[%a_][%w_]*$")
 	if pattern == nil then
 		api.complete(last_req_ctx.start, items)
-		return
+		vim.api.nvim_out_write("items " .. #items .. "\n")
+		return ''
 	else
 		cache = fuzzy_match(items, pattern )
 		api.complete(last_req_ctx.start, cache)
+		vim.api.nvim_out_write("cache " .. #cache .. "\n")
+		return ''
 	end
 
 	--if last_pattern == nil or last_pattern == "" then
@@ -99,12 +108,14 @@ local function _handle_completion(ctx, data)
 	end
 
 	cache = items
-	print("completion items find " .. #items)
+	vim.api.nvim_out_write("completion items find " .. #items .. "\n")
 
 	api.complete(ctx.start, cache)
+	return ''
 end
 
 local function _text_changed()
+
 	if ft.filetype == nil then
 		return
 	end
@@ -115,14 +126,14 @@ local function _text_changed()
 		return
 	end
 
-	if ctx:eq(last_req_ctx) then
-		_direct_completion()
-	elseif ft.is_request(ctx.typed) then --or not ctx:eq(last_req_ctx) then
+	if ft.is_request(ctx.typed) then --or not ctx:eq(last_req_ctx) then
 		items = nil
 		cache = nil
 		last_pattern = ""
 		last_req_ctx = ctx
 		lsp.lsp_complete(ctx)
+	elseif ctx:eq(last_req_ctx) then
+		_direct_completion()
 	end
 end
 
