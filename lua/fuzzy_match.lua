@@ -84,6 +84,12 @@ function module.head_fuzzy_match(items, pattern)
 		end
 	end
 	table.sort(sortArray)
+	local candicates = {}
+
+--	for i, v in ipairs(sortArray) do
+--		local index = result[v]
+--		table.insert(candicates, items[index])
+--	end
 	for i = -1, -1 * #sortArray, -1 do
 		local index = result[sortArray[i]]
 		table.insert(candicates, items[index])

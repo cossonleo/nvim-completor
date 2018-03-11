@@ -79,7 +79,8 @@ local function _direct_completion()
 			return ''
 		end
 
-		cache = fuzzy_match(cache, pattern)
+		--cache = fuzzy_match(cache, pattern)
+		cache = fuzzy_match(items, pattern)
 		last_pattern = pattern
 		api.complete(last_req_ctx.start, cache)
 		return ''
