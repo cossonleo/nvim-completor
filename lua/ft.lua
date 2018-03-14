@@ -131,17 +131,19 @@ local function _is_request(str)
 		return false
 	end
 
-	if st < ed then
-		return false
-	end
+	return true
 
-	if _ft_trigger == nil then
-		return false
-	end
+	--if st < ed then
+	--	return false
+	--end
 
-	local sub = string.sub(str, 1, ed - 1)
+	--if _ft_trigger == nil then
+	--	return false
+	--end
 
-	return not _ft_trigger(sub)
+	--local sub = string.sub(str, 1, ed - 1)
+
+	--return not _ft_trigger(sub)
 end
 
 local function _set_ft()
