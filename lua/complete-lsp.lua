@@ -48,14 +48,13 @@ local function _format_completion_item(item)
 	local word = item['label']
     local abbr = item['label']
     local menu = ""
-	local user_data = ""
 
 
 	if item['insertText'] ~= nil and item['insertText'] ~= "" then
         word = item['insertText'] -- 带有snippet
     end
 	if item['detail'] ~= nil then
-		abbr = item['insertText'] .. item['detail']
+		abbr = abbr .. ' ' .. item['detail']
 	end
 
 	if item.kind ~= nil then
