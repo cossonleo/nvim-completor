@@ -7,24 +7,15 @@
 "       Desc: 
 """"""""""""""""""""""""""""""""""""""""""
 func! lsp_completor#server_initialized()
-lua << EOF
-	local vlsp = require("vim-lsp")
-	vlsp.server_initialized()
-EOF
+	call luaeval("require('vim-lsp').server_initialized()")
 endfunc
 
 func! lsp_completor#server_exited()
-lua << EOF
-	local vlsp = require("vim-lsp")
-	vlsp.server_exited()
-EOF
+	call luaeval("require('vim-lsp').server_exited()")
 endfunc
 
 func! lsp_completor#on_insert_leave()
-lua << EOF
-	local cm = require("complete")
-	cm.reset_default()
-EOF
+	call luaeval("require('complete').reset_default()")
 endfunc
 
 
@@ -33,26 +24,17 @@ func! lsp_completor#on_insert_enter()
 	setlocal completeopt+=menuone
 	setlocal completeopt-=menu
 	setlocal completeopt+=noselect
-lua << EOF
-	local ft = require("ft")
-	ft.set_ft()
-EOF
+	call luaeval("require('ft').set_ft()")
 endfunc
 
 let s:lock = 0
 
 func! lsp_completor#on_text_changed()
-lua << EOF
-	local cm = require("complete")
-	cm.text_changed()
-EOF
+	call luaeval("require('complete').text_changed()")
 endfunc
 
 func! lsp_completor#on_text_changedp()
-lua << EOF
-	local cm = require("complete")
-	cm.direct_complete()
-EOF
+	call luaeval("require('complete').direct_complete()")
 endfunc
 
 "return { 'line': line('.') - 1, 'character': col('.') -1 }
@@ -80,13 +62,11 @@ func! lsp_completor#handle_lsp_completion(ctx, data)
 "	else
 "		echo string(a:data)
 "	endif
-
-lua << EOF
-	local ctx = vim.api.nvim_eval('a:ctx')
-	local data = vim.api.nvim_eval('a:data')
-	local cm = require("complete")
-	cm.handle_completion(ctx, data)
-EOF
+	
+	call luaeval("require('complete').handle_completion(_A.ctx, _A.data)", {
+				\ "ctx": a:ctx,
+				\ "data": a:data,
+				\ })
 endfunc
 
 
