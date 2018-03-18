@@ -1,9 +1,9 @@
 --------------------------------------------------
 --    LICENSE: MIT
 --     Author: Cosson2017
---    Version: 0.1
+--    Version: 0.2
 -- CreateTime: 2018-03-08 18:36:13
--- LastUpdate: 2018-03-08 18:36:28
+-- LastUpdate: 2018-03-18 18:18:41
 --       Desc: 
 --------------------------------------------------
 
@@ -26,7 +26,7 @@ local function _is_head_match(str, pattern)
 	end
 
 	local n = 2
-	local m = 33
+	local m = 47
 	local sum = 0
 	for i = 2, plen, 1 do
 		if slen - n < plen - i then 
@@ -64,6 +64,7 @@ function module.head_fuzzy_match(items, pattern)
 
 	local lp = string.lower(pattern)
 
+	vim.api.nvim_out_write("fuzzy match: pattern " .. pattern .. " ")
 	local result = {}
 	local sortArray = {}
 	for i, v in pairs(items) do
@@ -81,6 +82,7 @@ function module.head_fuzzy_match(items, pattern)
 			end
 			result[pir] = j
 			table.insert(sortArray, pir)
+			vim.api.nvim_out_write("item: " .. lw .. ' ')
 		end
 	end
 	table.sort(sortArray)
@@ -90,10 +92,11 @@ function module.head_fuzzy_match(items, pattern)
 --		local index = result[v]
 --		table.insert(candicates, items[index])
 --	end
-	for i = -1, -1 * #sortArray, -1 do
+	for i = 1, #sortArray, 1 do
 		local index = result[sortArray[i]]
-		table.insert(candicates, items[index])
+		table.insert(candicates,1, items[index])
 	end
+	vim.api.nvim_out_write('\n')
 	return candicates
 end
 

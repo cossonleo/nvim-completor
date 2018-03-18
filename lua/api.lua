@@ -1,9 +1,9 @@
 --------------------------------------------------
 --    LICENSE: MIT
 --     Author: Cosson2017
---    Version: 0.1
+--    Version: 0.2
 -- CreateTime: 2018-03-06 11:38:17
--- LastUpdate: 2018-03-06 11:38:17
+-- LastUpdate: 2018-03-18 18:18:01
 --       Desc: 
 --------------------------------------------------
 
@@ -32,8 +32,7 @@ function api.get_bufname()
 end
 
 function api.complete(start, items)
-	vim.api.nvim_out_write("find match len " .. #items .. '\n')
-    vim.api.nvim_call_function('complete', {start, items})
+    vim.api.nvim_call_function('lsp_completor#on_complete', {start, items})
 end
 
 function api.lsp_complete(server_name, ctx)
@@ -52,10 +51,12 @@ local function _dic_len(dict)
 	return count
 end
 
-function api.pumvisible()
-	local pum = vim.api.nvim_call_function('pumvisible', {})
-	local recen = vim.api.nvim_get_vvar('completed_item')
-	return pum ~= 0 and _dic_len(recen) ~= 0
+function api.menu_selected()
+	local sl = vim.api.nvim_call_function('lsp_completor#menu_selected', {})
+	if sl == 1 then
+		return true
+	end
+	return false
 end
 
 api.dict_len = _dic_len

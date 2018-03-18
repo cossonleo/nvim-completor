@@ -98,6 +98,7 @@ end
 local function _lsp_complete(ctx)
 	local servers = api.get_whitelist_servers()
 	if servers[1] == nil  then
+		vim.api.nvim_out_write("servers is nil\n")
 		return
 	end
 

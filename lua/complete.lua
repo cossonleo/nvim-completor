@@ -1,9 +1,9 @@
 --------------------------------------------------
---    LICENSE: 
---     Author: 
---    Version: 
+--    LICENSE: MIT
+--     Author: Cosson2017
+--    Version: 0.2
 -- CreateTime: 2018-03-04 22:53:58
--- LastUpdate: 2018-03-08 18:36:39
+-- LastUpdate: 2018-03-18 18:18:31
 --       Desc: 
 --------------------------------------------------
 
@@ -48,11 +48,10 @@ local function _get_context()
 end
 
 local function _direct_completion()
-	if api.pumvisible() then
+	if api.menu_selected() then
 		return
 	end
 	if items == nil or #items == 0 then
-		vim.api.nvim_out_write("items is empty \n")
 		return
 	end
 
@@ -124,11 +123,9 @@ local function _handle_completion(ctx, data)
 		cache = nil
 		last_pattern = nil
 		items = nil
-		vim.api.nvim_out_write("complete ctx change\n")
 		return
 	end
 	cache = items
-	vim.api.nvim_out_write("completion items find " .. #items .. "\n")
 	api.complete(ctx.start, cache)
 	return ''
 end

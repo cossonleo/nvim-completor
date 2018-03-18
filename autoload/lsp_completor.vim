@@ -1,17 +1,20 @@
 """"""""""""""""""""""""""""""""""""""""""
 "    LICENSE: MIT
 "     Author: Cosson2017
-"    Version: 0.1
+"    Version: 0.2
 " CreateTime: 2018-03-11 15:59:12
-" LastUpdate: 2018-03-11 15:59:12
+" LastUpdate: 2018-03-18 18:17:50
 "       Desc: 
 """"""""""""""""""""""""""""""""""""""""""
+
+
 func! lsp_completor#on_insert_leave()
 lua << EOF
 	local cm = require("complete")
 	cm.reset_default()
 EOF
 endfunc
+
 
 func! lsp_completor#on_insert_enter()
 	setlocal completeopt-=longest
@@ -24,8 +27,7 @@ lua << EOF
 EOF
 endfunc
 
-func! lsp_completor#on_menupopup()
-endfunc
+let s:lock = 0
 
 func! lsp_completor#on_text_changed()
 lua << EOF
@@ -74,4 +76,18 @@ lua << EOF
 	cm.handle_completion(ctx, data)
 EOF
 endfunc
+
+
+func! lsp_completor#on_complete(startcol, matchs)
+	call complete(a:startcol, a:matchs)
+	return ''
+endfunc
+
+func! lsp_completor#menu_selected()
+	if pumvisible() && !empty(v:completed_item)
+		return 1
+	endif
+	return 0
+endfunc
+
 
