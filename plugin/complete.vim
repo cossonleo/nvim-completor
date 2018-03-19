@@ -18,6 +18,8 @@ autocmd TextChangedI * call lsp_completor#on_text_changed()
 autocmd InsertLeave * call lsp_completor#on_insert_leave()
 autocmd InsertEnter * call lsp_completor#on_insert_enter()
 
+au User lsp_server_init call lsp_completor#server_initialized()
+au User lsp_server_exit call lsp_completor#server_exited()
 
 "augroup ayncomplete
 "    autocmd! * <buffer>

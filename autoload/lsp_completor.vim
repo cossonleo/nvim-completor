@@ -6,7 +6,19 @@
 " LastUpdate: 2018-03-18 18:17:50
 "       Desc: 
 """"""""""""""""""""""""""""""""""""""""""
+func! lsp_completor#server_initialized()
+lua << EOF
+	local vlsp = require("vim-lsp")
+	vlsp.server_initialized()
+EOF
+endfunc
 
+func! lsp_completor#server_exited()
+lua << EOF
+	local vlsp = require("vim-lsp")
+	vlsp.server_exited()
+EOF
+endfunc
 
 func! lsp_completor#on_insert_leave()
 lua << EOF

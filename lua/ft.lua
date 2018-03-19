@@ -3,7 +3,7 @@
 --     Author: Cosson2017
 --    Version: 0.1
 -- CreateTime: 2018-03-06 11:52:05
--- LastUpdate: 2018-03-06 11:52:05
+-- LastUpdate: 2018-03-19 13:10:54
 --       Desc: relative filetype 
 --------------------------------------------------
 
@@ -57,6 +57,17 @@ function _context:eq(ctx)
 	if self.start ~= ctx.start then
 		return false
 	end
+
+	if self.start > self.ed or ctx.start > ctx.ed then
+		return true
+	end
+
+	local se = self.typed:sub(self.start, self.start)
+	local ce = ctx.typed:sub(ctx.start, ctx.start)
+	if se ~= ce then
+		return false
+	end
+
 	return true
 	--local s = self.typed:sub(self.start, self.start)
 	--local c = ctx.typed:sub(self.start, self.start)
@@ -150,7 +161,6 @@ local function _set_ft()
 
 	ft.trigger_request = _trigger_request
 	ft.filetype = _ft
-
 end
 
 ft.is_request = _is_request

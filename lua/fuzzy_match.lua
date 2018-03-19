@@ -3,7 +3,7 @@
 --     Author: Cosson2017
 --    Version: 0.2
 -- CreateTime: 2018-03-08 18:36:13
--- LastUpdate: 2018-03-18 18:18:41
+-- LastUpdate: 2018-03-19 13:18:13
 --       Desc: 
 --------------------------------------------------
 
@@ -26,8 +26,8 @@ local function _is_head_match(str, pattern)
 	end
 
 	local n = 2
-	local m = 47
-	local sum = 0
+	local m = 46  -- 2 ^ m 	当m <= 46时是整数
+	local sum = 0 -- sum max 2 ^ 46 - 1
 	for i = 2, plen, 1 do
 		if slen - n < plen - i then 
 			return 0
@@ -36,7 +36,9 @@ local function _is_head_match(str, pattern)
 		for j = n, slen, 1 do
 			n = n + 1
 			if str:sub(j,j) == pattern:sub(i, i) then
-				sum = sum + 2 ^ (m - n + 1)
+				if n < m + 1 then
+					sum = sum + 2 ^ (m - n + 1)
+				end
 				break
 			end
 			if j == slen then

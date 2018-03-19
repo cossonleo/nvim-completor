@@ -3,11 +3,12 @@
 --     Author: Cosson2017
 --    Version: 0.1
 -- CreateTime: 2018-03-07 13:17:08
--- LastUpdate: 2018-03-08 18:36:44
+-- LastUpdate: 2018-03-19 13:10:44
 --       Desc: 
 --------------------------------------------------
 
-api = require("api")
+local api = require("api")
+local vim_lsp = require("vim-lsp")
 
 local lsp = {} -- { server_name: 1 }
 
@@ -96,13 +97,13 @@ end
 
 
 local function _lsp_complete(ctx)
-	local servers = api.get_whitelist_servers()
-	if servers[1] == nil  then
+	local server_name = vim_lsp.get_cur_server()
+	if server_name == nil then
 		vim.api.nvim_out_write("servers is nil\n")
 		return
 	end
 
-	api.lsp_complete(servers[1], ctx)
+	api.lsp_complete(server_name, ctx)
 end
 
 lsp.lsp_complete = _lsp_complete

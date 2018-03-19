@@ -3,7 +3,7 @@
 --     Author: Cosson2017
 --    Version: 0.2
 -- CreateTime: 2018-03-04 22:53:58
--- LastUpdate: 2018-03-18 18:18:31
+-- LastUpdate: 2018-03-19 13:10:38
 --       Desc: 
 --------------------------------------------------
 
@@ -78,8 +78,8 @@ local function _direct_completion()
 			return ''
 		end
 
-		--cache = fuzzy_match(cache, pattern)
-		cache = fuzzy_match(items, pattern)
+		cache = fuzzy_match(cache, pattern)
+		--cache = fuzzy_match(items, pattern)
 		last_pattern = pattern
 		api.complete(last_req_ctx.start, cache)
 		return ''
@@ -141,14 +141,14 @@ local function _text_changed()
 		return
 	end
 
-	if ft.is_request(ctx.typed) then --or not ctx:eq(last_req_ctx) then
+	if ctx:eq(last_req_ctx) then
+		_direct_completion()
+	elseif ft.is_request(ctx.typed) then --or not ctx:eq(last_req_ctx) then
 		items = nil
 		cache = nil
 		last_pattern = nil
 		last_req_ctx = ctx
 		lsp.lsp_complete(ctx)
-	elseif ctx:eq(last_req_ctx) then
-		_direct_completion()
 	end
 end
 
