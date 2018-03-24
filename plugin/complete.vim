@@ -12,7 +12,9 @@ if exists('g:neo_completor_load')
 endif
 let g:neo_completor_load = 1
 
-autocmd TextChangedP * call lsp_completor#on_text_changedp()
+if exists("##TextChangedP")
+	autocmd TextChangedP * call lsp_completor#on_text_changedp()
+endif
 "autocmd TextChangedP * call lsp_completor#on_text_changed()
 autocmd TextChangedI * call lsp_completor#on_text_changed()
 autocmd InsertLeave * call lsp_completor#on_insert_leave()
