@@ -11,30 +11,10 @@ local module = {}
 
 local servers = {} -- map[buftype]servername
 local api = require("api")
---function module.server_initialized()
---	local bt = api.get_filetype()
---	if module.servers[bt] ~= nil then
---		return
---	end
---
---	local servers = api.get_whitelist_servers()
---	if servers[1] == nil then
---		return
---	end
---	local capabilites = vim.api.nvim_call_function('lsp#get_server_capabilities', {servers[1]})
---	if capabilites['completionProvider'] ~= nil then
---		if bt ~= nil and bt ~= "" then
---			module.servers[bt] = servers[1]
---		end
---	end
---end
 
 function module.server_initialized()
-	--local qflist = {}
-	--table.insert(qflist,{["text"]= "server_init" })
     local server_names = vim.api.nvim_call_function('lsp#get_server_names', {})
     for sk, server_name in ipairs(server_names) do
-	--table.insert(qflist,{["text"]= server_name })
 		local info = vim.api.nvim_call_function('lsp#get_server_info', {server_name})
 		if info['whitelist'] ~= nil then
 			for k, bt in ipairs(info['whitelist']) do
@@ -50,8 +30,6 @@ function module.server_initialized()
 		end
 
     end
-
-	--vim.api.nvim_call_function("setqflist", {qflist})
 end
 
 function module.server_exited()

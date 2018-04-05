@@ -9,8 +9,7 @@
 
 local api = require("api")
 local vim_lsp = require("vim-lsp")
-
-local lsp = {} -- { server_name: 1 }
+local module = {} -- { server_name: 1 }
 
 local _kind_text_mappings = {
             'text',
@@ -48,10 +47,14 @@ local function _format_completion_item(item)
 	local word = item['label']
     local abbr = item['label']
     local menu = ""
+	local start = -1
 
 
 	if item['insertText'] ~= nil and item['insertText'] ~= "" then
         word = item['insertText'] -- 带有snippet
+	elseif item['textEdit'] ~= nil then
+		word = item['textEdit']['newText']
+		start = item['textEdit']['range']['start']['character']
     end
 	if item['detail'] ~= nil then
 		abbr = abbr .. ' ' .. item['detail']
@@ -61,7 +64,7 @@ local function _format_completion_item(item)
 		menu = _get_kind_text(item.kind)
 	end
 
-    return {word = word, abbr = abbr, menu = menu, icase = 1, dup = 0}
+    return {item = {word = word, abbr = abbr, menu = menu, icase = 1, dup = 0}, start = start}
 end
 
 
@@ -90,11 +93,16 @@ local function _format_completion(data)
 	end
 
 	local items = {}
+	local start = -1
 	for k, v in pairs(result) do
 		local item = _format_completion_item(v)
-		table.insert(items, item)
+		start = item.start
+		table.insert(items, item.item)
 	end
-	return items
+	if start ~= -1 then
+		start = start + 1
+	end
+	return {items = items, start = start}
 end
 
 
@@ -108,7 +116,7 @@ local function _lsp_complete(ctx)
 	api.lsp_complete(server_name, ctx)
 end
 
-lsp.lsp_complete = _lsp_complete
-lsp.format_completion = _format_completion
+module.lsp_complete = _lsp_complete
+module.format_completion = _format_completion
 
-return lsp
+return module
