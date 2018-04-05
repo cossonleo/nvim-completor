@@ -44,21 +44,24 @@ local function _go_trigger_pos(str)
 	return string.find(str, '[%w_]+$')
 end
 
+local function _default_trigger_pos(str)
+	return string.find(str, '[%w_]+')
+end
+
 local function _set_ft()
 	_ft = api.get_filetype()
+	module.filetype = _ft
+	module.trigger_pos = _default_trigger_pos
 
 	if _ft == "lua" then
-		module.filetype = _ft
 		module.trigger_pos = _lua_trigger_pos
 	end
 
 	if _ft == "c" or _ft == "cpp" or _ft == "cc" or _ft == "h" or _ft == "hpp" then
-		module.filetype = _ft
 		module.trigger_pos = _cfamily_trigger_pos
 	end
 
 	if _ft == "go" then
-		module.filetype = _ft
 		module.trigger_pos = _go_trigger_pos
 	end
 end
