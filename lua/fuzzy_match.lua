@@ -66,7 +66,6 @@ function module.head_fuzzy_match(items, pattern)
 
 	local lp = string.lower(pattern)
 
-	vim.api.nvim_out_write("fuzzy match: pattern " .. pattern .. " ")
 	local result = {}
 	local sortArray = {}
 	for i, v in pairs(items) do
@@ -84,21 +83,15 @@ function module.head_fuzzy_match(items, pattern)
 			end
 			result[pir] = j
 			table.insert(sortArray, pir)
-			vim.api.nvim_out_write("item: " .. lw .. ' ')
 		end
 	end
 	table.sort(sortArray)
 	local candicates = {}
 
---	for i, v in ipairs(sortArray) do
---		local index = result[v]
---		table.insert(candicates, items[index])
---	end
 	for i = 1, #sortArray, 1 do
 		local index = result[sortArray[i]]
 		table.insert(candicates,1, items[index])
 	end
-	vim.api.nvim_out_write('\n')
 	return candicates
 end
 

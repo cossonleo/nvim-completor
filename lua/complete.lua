@@ -24,6 +24,13 @@ local items = nil
 local cache = nil
 local last_pattern = nil
 
+local function _reset_default(ctx)
+	items = nil
+	cache = nil
+	last_pattern = nil
+	last_req_ctx = ctx or context.context:new()
+end
+
 local function _direct_completion()
 	if api.menu_selected() then
 		return
@@ -77,7 +84,8 @@ local function _handle_completion(ctx, data)
 	else
 		items.start = items.start
 	end
-	api.complete(items.start, cache)
+	_direct_completion()
+	--api.complete(items.start, cache)
 	return ''
 end
 
@@ -92,22 +100,19 @@ local function _text_changed()
 		return
 	end
 
-	if ctx:eq(last_req_ctx) then
+	if items ~= nil and items.incomplete then
+		_reset_default(ctx)
+		lsp.lsp_complete(ctx)
+	elseif ctx:eq(last_req_ctx) then
 		_direct_completion()
 	elseif ctx.trigger_pos ~= 0 then --or not ctx:eq(last_req_ctx) then
-		items = nil
-		cache = nil
-		last_pattern = nil
-		last_req_ctx = ctx
-		lsp.lsp_complete(ctx)
+		if lsp.lsp_complete(ctx) then
+			_reset_default(ctx)
+		else
+			_reset_default()
+			--vim.api.nvim_input("<<c-x><c-n>")
+		end
 	end
-end
-
-function _reset_default()
-	items = nil
-	cache = nil
-	last_pattern = nil
-	last_req_ctx = context.context:new()
 end
 
 complete.text_changed = _text_changed

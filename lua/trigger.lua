@@ -18,14 +18,18 @@ local function _cfamily_trigger_pos(str)
 		return start
 	end
 	start = string.find(str, '->[%w_]*$')
-	if star ~= nil then
+	if start ~= nil then
 		return start + 1
 	end
 	start = string.find(str, '::[%w_]*$')
 	if start ~= nil then
 		return start + 1
 	end
-	return string.find(str,'[%w_]+$')
+	start = string.find(str,'[%w_]+$')
+	if start ~= nil then
+		return start
+	end
+	return 0
 end
 
 local function _lua_trigger_pos(str)
@@ -33,7 +37,12 @@ local function _lua_trigger_pos(str)
 	if start ~= nil then
 		return start
 	end
-	return string.find(str, '[%w_]+$')
+
+	start = string.find(str, '[%w_]+$')
+	if start ~= nil then
+		return start
+	end
+	return 0
 end
 
 local function _go_trigger_pos(str)
@@ -41,11 +50,20 @@ local function _go_trigger_pos(str)
 	if start ~= nil then
 		return start
 	end
-	return string.find(str, '[%w_]+$')
+	start = string.find(str, '[%w_]+$')
+	if start ~= nil then
+		return start
+	end
+	return 0
+	
 end
 
 local function _default_trigger_pos(str)
-	return string.find(str, '[%w_]+')
+	local start = string.find(str, '[%w_]+')
+	if start ~= nil then
+		return start
+	end
+	return 0
 end
 
 local function _set_ft()

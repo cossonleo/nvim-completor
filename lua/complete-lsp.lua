@@ -52,7 +52,9 @@ local function _format_completion_item(item)
 
 	if item['insertText'] ~= nil and item['insertText'] ~= "" then
         word = item['insertText'] -- 带有snippet
-	elseif item['textEdit'] ~= nil then
+	end
+
+	if item['textEdit'] ~= nil then
 		word = item['textEdit']['newText']
 		start = item['textEdit']['range']['start']['character']
     end
@@ -85,24 +87,22 @@ local function _format_completion(data)
 		return
 	end
 
-	if result['items'] == nil then
-		local incomplete = 0
-	else
-		result = result['items']
-		local incomplete = result['isIncomplete']
-	end
+	local format_res = {}
+	format_res.incomplete = result['isIncomplete']
+	format_res.items = {}
+	format_res.start = -1
 
-	local items = {}
-	local start = -1
+	result = result['items']
 	for k, v in pairs(result) do
 		local item = _format_completion_item(v)
-		start = item.start
-		table.insert(items, item.item)
+		format_res.start = item.start
+		table.insert(format_res.items, item.item)
 	end
-	if start ~= -1 then
-		start = start + 1
+
+	if format_res.start ~= -1 then
+		format_res.start = format_res.start + 1
 	end
-	return {items = items, start = start}
+	return format_res
 end
 
 
@@ -110,10 +110,11 @@ local function _lsp_complete(ctx)
 	local server_name = vim_lsp.get_cur_server()
 	if server_name == nil then
 		vim.api.nvim_out_write("servers is nil\n")
-		return
+		return false
 	end
 
 	api.lsp_complete(server_name, ctx)
+	return true
 end
 
 module.lsp_complete = _lsp_complete

@@ -24,6 +24,7 @@ func! lsp_completor#on_insert_enter()
 	setlocal completeopt+=menuone
 	setlocal completeopt-=menu
 	setlocal completeopt+=noselect
+	setlocal completeopt+=noinsert
 	call luaeval("require('trigger').set_ft()")
 endfunc
 
@@ -37,12 +38,13 @@ endfunc
 
 "return { 'line': line('.') - 1, 'character': col('.') -1 }
 "character: 下标从1开始
+"\   'position': {'line': a:ctx.line - 1, 'character': a:ctx.trigger_pos},
 func! lsp_completor#lsp_complete(server_name, ctx)
     call lsp#send_request(a:server_name, {
         \ 'method': 'textDocument/completion',
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
-        \   'position': {'line': a:ctx.line - 1, 'character': a:ctx.trigger_pos},
+        \   'position': {'line': a:ctx.line - 1, 'character': len(a:ctx.typed)},
         \ },
         \ 'on_notification': function('lsp_completor#handle_lsp_completion', [a:ctx]),
         \ })

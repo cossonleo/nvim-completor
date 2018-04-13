@@ -68,12 +68,8 @@ function module.get_context()
 	cur_ctx.bno = pos.buf
 	cur_ctx.line = pos.line
 	cur_ctx.filetype = trigger.filetype
-	cur_ctx.trigger_pos = pos.col - 1
 	cur_ctx.typed = vim.api.nvim_get_current_line():sub(1, pos.col - 1)
 	cur_ctx.trigger_pos = trigger.trigger_pos(cur_ctx.typed)
-	if cur_ctx.trigger_pos == nil then
-		cur_ctx.trigger_pos = 0
-	end
 	return cur_ctx
 end
 
