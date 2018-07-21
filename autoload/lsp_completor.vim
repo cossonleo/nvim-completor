@@ -57,7 +57,7 @@ func! lsp_completor#handle_lsp_completion(ctx, data)
 "		echo string(a:data)
 "	endif
 	
-	call luaeval("require('complete').handle_completion(_A.ctx, _A.data)", {
+	call luaeval("require('vim-lsp').handle_lsp_complete(_A.ctx, _A.data)", {
 				\ "ctx": a:ctx,
 				\ "data": a:data,
 				\ })

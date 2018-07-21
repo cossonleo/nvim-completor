@@ -10,6 +10,19 @@
 -- module name
 local api = {}
 
+-- 获取当前行内容
+-- start：开始列
+-- ed：结束列
+-- [start, ed)
+-- return: str
+function api.get_cur_line(start, ed)
+	-- nvim_get_current_buf()
+	-- nvim_get_current_line()
+	-- nvim_buf_get_lines({buffer}, {start}, {end}, {strict_indexing})
+	local ctn = vim.api.nvim_get_current_line()
+	local str = string.sub(ctx, start, ed - 1)
+	return str
+end
 
 -- row: 都是从1开始
 -- getcurpos: col 从1开始 符合lua的下标

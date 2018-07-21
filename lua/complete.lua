@@ -12,7 +12,7 @@ local api = require("api")
 local fuzzy = require("fuzzy_match")
 local trigger = require("trigger")
 local context = require("context")
-local lsp = require("complete-lsp")
+local lsp = require("vim-lsp")
 -- module name
 local complete = {}
 
@@ -20,9 +20,6 @@ local complete = {}
 local fuzzy_match = fuzzy.head_fuzzy_match
 
 local last_req_ctx = context.context:new()
-local items = nil
-local cache = nil
-local last_pattern = nil
 
 local function _reset_default(ctx)
 	items = nil
@@ -61,10 +58,6 @@ local function _direct_completion()
 end
 
 local function _handle_completion(ctx, data)
-	items = lsp.format_completion(data)
-	if #items.items == 0 then
-		return
-	end
 
 	local ctx = context.get_context()
 	if not ctx:eq(last_req_ctx) then

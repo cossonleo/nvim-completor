@@ -1,16 +1,21 @@
 --------------------------------------------------
---    LICENSE: MIT
---     Author: Cosson2017
---    Version: 0.2
--- CreateTime: 2018-03-08 18:36:13
--- LastUpdate: 2018-03-19 13:18:13
+--    LICENSE: 
+--     Author: 
+--    Version: 
+-- CreateTime: 2018-07-21 07:39:54
+-- LastUpdate: 2018-07-21 07:39:54
 --       Desc: 
 --------------------------------------------------
 
 local module = {}
 
+local l_ctx = nil -- 当前上下文环境
+local l_candidate = nil -- 当前候选
+local cache = nil
+local last_pattern = nil
+
 -- 是否符合首字母模糊匹配
-local function _is_head_match(str, pattern)
+local function func_is_head_match(str, pattern)
 	slen = str:len()
 	plen = pattern:len()
 	if slen < plen then
@@ -55,7 +60,7 @@ end
 -- @items: table
 -- @pattern:
 -- return: table
-function module.head_fuzzy_match(items, pattern)
+local function func_head_fuzzy_match(items, pattern)
 	if items == nil or #items == 0 then
 		return {}
 	end
@@ -70,7 +75,7 @@ function module.head_fuzzy_match(items, pattern)
 	local sortArray = {}
 	for i, v in pairs(items) do
 		local lw = string.lower(v['word'])
-		local pir = _is_head_match(lw, lp)
+		local pir = func_is_head_match(lw, lp)
 		if  pir ~= 0 then
 			local j = i
 			while(result[pir] ~= nil) do
@@ -95,50 +100,21 @@ function module.head_fuzzy_match(items, pattern)
 	return candicates
 end
 
+-- 新的候选
+local function func_add_candidate(ctx, candi)
+	if l_ctx == nil then
+		l_ctx = ctx
+		l_candidate = candi
+	end
 
---function module.head_fuzzy_match(items, pattern)
---	if items == nil or #items == 0 then
---		return {}
---	end
---
---	if pattern:len() == 0 then
---		return items
---	end
---
---	local lp = string.lower(pattern)
---
---	local result = {}
---	local sortArray = {}
---	for i, v in pairs(items) do
---		local lw = string.lower(v['word'])
---		local pir = _is_head_match(lw, lp)
---		if  pir ~= 0 then
---			local j = i
---			local c = 0
---			while(result[pir] ~= nil) do
---				vim.api.nvim_out_write("result[" .. pir .."] " .. result[pir])
---				local p = result[pir]
---				if items[j]['word'] > items[p]['word'] then
---					result[pir] = j
---					j = p
---				end
---				pir = pir + 1
---				c = c + 1
---				vim.api.nvim_out_write(' count '..c .. '\n')
---				os.execute("sleep 0.5")
---			end
---			result[pir] = j
---			table.insert(sortArray, pir)
---		end
---	end
---	print("sort finish")
---	table.sort(sortArray)
---	local candicates = {}
---	for i, v in ipairs(sortArray) do
---		local index = result[v]
---		table.insert(candicates, items[index])
---	end
---	return candicates
---end
+	func_match_complete()
+end
+
+-- 触发或更新补全选项
+local function func_match_complete()
+end
+
+module.head_fuzzy_match = func_head_fuzzy_match
+module.add_candidate = func_add_candidate
 
 return module
