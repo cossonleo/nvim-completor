@@ -29,10 +29,16 @@ func! lsp_completor#on_insert_enter()
 endfunc
 
 func! lsp_completor#on_text_changed()
+	if lsp_completor#menu_selected() == 1
+		return
+	endif
 	call luaeval("require('complete').text_changed()")
 endfunc
 
 func! lsp_completor#on_text_changedp()
+	if lsp_completor#menu_selected() == 1
+		return
+	endif
 	call luaeval("require('complete').direct_complete()")
 endfunc
 
