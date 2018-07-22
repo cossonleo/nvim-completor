@@ -9,8 +9,11 @@
 
 local module = {}
 
-local api = require("api")
+local ncm = require("nvim-completor/complete")
+local helper = require("nvim-completor/helper")
+local log = require("nvim-completor/log")
 local servers = {} -- map[buftype]servername
+local l_ctx = nil
 
 local _kind_text_mappings = {
             'text',
@@ -33,8 +36,16 @@ local _kind_text_mappings = {
             'reference',
 		}
  
+local function l_call_lsp_complete(server_name, ctx)
+	vim.api.nvim_call_function('vim_lsp#lsp_complete', {server_name, ctx})
+end
+
+local function l_get_whitelist_servers()
+	return vim.api.nvim_call_function('lsp#get_whitelisted_servers', {})
+end
 
 local function func_server_initialized()
+	log.debug("server init start")
     local server_names = vim.api.nvim_call_function('lsp#get_server_names', {})
     for sk, server_name in ipairs(server_names) do
 		local info = vim.api.nvim_call_function('lsp#get_server_info', {server_name})
@@ -51,6 +62,7 @@ local function func_server_initialized()
 			end
 		end
     end
+	log.debug("server init success")
 end
 
 local function func_server_exited()
@@ -59,11 +71,11 @@ end
 
 
 local function func_get_cur_server()
-	local bt = api.get_filetype()
+	local bt = helper.get_filetype()
 	return servers[bt]
 end
 
-function func_get_kind_text(index)
+local function func_get_kind_text(index)
 	if index == nil then
 		return ''
 	end
@@ -74,7 +86,7 @@ function func_get_kind_text(index)
 	return t
 end
 
-local function func_format_item(item)
+local function func_format_item(ctx, item)
 	local word = item['label']
     local abbr = item['label']
     local menu = ""
@@ -97,11 +109,18 @@ local function func_format_item(item)
 		menu = func_get_kind_text(item.kind)
 	end
 
-    return {item = {word = word, abbr = abbr, menu = menu, icase = 1, dup = 0}, start = start}
+	-- 当前不考虑start > ctx.col情况, 如果需要再进行处理
+	if start ~= nil or start ~= -1 then
+		if start < ctx.replace_col then
+			word = string.sub(word, ctx.replace_col - start - 1)
+		end
+	end
+
+    return {word = word, abbr = abbr, menu = menu, icase = 1, dup = 0}
 end
 
 
-local function func_format_completion(data)
+local function func_format_completion(ctx, data)
 	if data == nil then
 		return 
 	end
@@ -119,46 +138,42 @@ local function func_format_completion(data)
 	end
 
 	local format_res = {}
-	format_res.incomplete = result['isIncomplete']
-	format_res.items = {}
-	format_res.start = -1
+	local inc = result['isIncomplete']
 
 	result = result['items']
 	for k, v in pairs(result) do
-		local item = func_format_item(v)
-		format_res.start = item.start
-		table.insert(format_res.items, item.item)
+		local item = func_format_item(ctx, v)
+		table.insert(format_res, item)
 	end
-
-	if format_res.start ~= -1 then
-		format_res.start = format_res.start + 1
-	end
-	return format_res
-end
-
-
-local function func_lsp_complete(ctx)
-	local server_name = vim_lsp.get_cur_server()
-	if server_name == nil then
-		vim.api.nvim_out_write("servers is nil\n")
-		return false
-	end
-
-	api.lsp_complete(server_name, ctx)
-	return true
+	return {result = format_res, inc = inc}
 end
 
 local function func_handle_lsp_complete(ctx, data)
-	items = func_format_completion(data)
-	if #items.items == 0 then
+	local result = func_format_completion(ctx, data)
+	if #result.result == 0 then
 		return
 	end
+
+	ncm.add_candidate(ctx, result.result, result.inc)
 end
 
-module.lsp_complete = func_lsp_complete
-module.handle_lsp_complete = func_handle_lsp_complete
+local function l_lsp_complete(ctx)
+	local server_name = func_get_cur_server()
+	if server_name == nil then
+		return false
+	end
 
+	l_call_lsp_complete(server_name, ctx)
+	return true
+end
+
+-- 添加引擎到complete中
+ncm.add_engine(l_lsp_complete)
+log.debug("add engine success")
+
+module.handle_lsp_complete = func_handle_lsp_complete
 module.server_initialized = func_server_initialized
 module.server_exited = func_server_exited
+module.get_whitelist_servers = l_get_whitelist_servers
 
 return module

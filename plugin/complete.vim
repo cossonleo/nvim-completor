@@ -12,13 +12,22 @@ if exists('g:neo_completor_load')
 endif
 let g:neo_completor_load = 1
 
-"autocmd TextChangedP * call lsp_completor#on_text_changedp()
-"autocmd TextChangedI * call lsp_completor#on_text_changed()
+" level
+" debug 4
+" warn 3
+" info 2
+" error 1
+"let g:nvim_completor_log_level = 4
+
+autocmd TextChangedP * call nvim_completor#on_text_changedp()
+autocmd TextChangedI * call nvim_completor#on_text_changed()
 "autocmd InsertLeave * call lsp_completor#on_insert_leave()
-"autocmd InsertEnter * call lsp_completor#on_insert_enter()
+autocmd InsertEnter * call nvim_completor#on_insert_enter()
 "
-"au User lsp_server_init call lsp_completor#server_initialized()
-"au User lsp_server_exit call lsp_completor#server_exited()
+au User lsp_server_init call vim_lsp#server_initialized()
+au User lsp_server_exit call vim_lsp#server_exited()
+
+"call lsp_completor#server_initialized()
 
 "augroup ayncomplete
 "    autocmd! * <buffer>

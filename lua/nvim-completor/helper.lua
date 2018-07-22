@@ -10,6 +10,8 @@
 -- module name
 local module = {}
 
+local log = require("nvim-completor/log")
+
 -- 获取当前行内容
 -- start：开始列 如果nil，则设置为1
 -- ed：结束列 如果nil, 则设置为到光标前一个位置
@@ -54,16 +56,9 @@ local function l_get_bufname()
 end
 
 local function l_complete(start, items)
-    vim.api.nvim_call_function('lsp_completor#on_complete', {start, items})
+    vim.api.nvim_call_function('nvim_completor#on_complete', {start, items})
 end
 
-local function l_lsp_complete(server_name, ctx)
-	vim.api.nvim_call_function('lsp_completor#lsp_complete', {server_name, ctx})
-end
-
-local function l_get_whitelist_servers()
-	return vim.api.nvim_call_function('lsp#get_whitelisted_servers', {})
-end
 
 local function l_dict_len(dict)
 	local count = 0
@@ -74,7 +69,7 @@ local function l_dict_len(dict)
 end
 
 local function l_menu_selected()
-	local sl = vim.api.nvim_call_function('lsp_completor#menu_selected', {})
+	local sl = vim.api.nvim_call_function('nvim_completor#menu_selected', {})
 	if sl == 1 then
 		return true
 	end
@@ -183,8 +178,6 @@ module.get_curpos = l_get_curpos
 module.get_filetype = l_get_filetype
 module.get_bufname = l_get_bufname
 module.complete = l_complete
-module.lsp_complete = l_lsp_complete
-module.get_whitelist_servers = l_get_whitelist_servers
 module.dict_len = l_dict_len
 module.menu_selected = l_menu_selected
 module.head_fuzzy_match = l_head_fuzzy_match

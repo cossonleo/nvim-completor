@@ -1,2 +1,2 @@
-local t = {ss = "ss", bb = "bb", cc = "cc"}
-print(#t)
+local log = require("nvim-completor/log")
+local vl = require("complete-engine/vim-lsp")
