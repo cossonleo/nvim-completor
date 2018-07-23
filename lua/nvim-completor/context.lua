@@ -11,9 +11,10 @@ local helper = require("nvim-completor/helper")
 local lang = require("nvim-completor/lang-spec")
 
 local module = {}
+local private = {}
 
 -- 获取当前上下文 不触发补全的返回nil
-local function l_get_cur_ctx()
+module.get_cur_ctx = function()
 	local pos = helper.get_curpos()
 	if pos.col <= 1 then
 		return nil
@@ -36,7 +37,7 @@ local function l_get_cur_ctx()
 end
 
 -- 上下文是否相等
-local function l_ctx_is_equal(ctx1, ctx2)
+module.ctx_is_equal = function(ctx1, ctx2)
 	if ctx1 == nil or ctx2 == nil then
 		return false
 	end
@@ -54,8 +55,5 @@ local function l_ctx_is_equal(ctx1, ctx2)
 	end
 	return true
 end
-
-module.get_cur_ctx = l_get_cur_ctx
-module.ctx_is_equal = l_ctx_is_equal
 
 return module

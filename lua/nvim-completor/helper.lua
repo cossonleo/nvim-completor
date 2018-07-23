@@ -9,6 +9,7 @@
 
 -- module name
 local module = {}
+local private = {}
 
 local log = require("nvim-completor/log")
 
@@ -17,50 +18,63 @@ local log = require("nvim-completor/log")
 -- ed：结束列 如果nil, 则设置为到光标前一个位置
 -- [start, ed)
 -- return: str
-local function l_get_cur_line(start, ed)
+module.get_cur_line = function(start, ed)
 	-- nvim_get_current_buf()
 	-- nvim_get_current_line()
 	-- nvim_buf_get_lines({buffer}, {start}, {end}, {strict_indexing})
-	if start == nil then
-		start = 1
+	local st = 1
+	local tail = 1
+	if start ~= nil then
+		st = start
 	end
 
 	if ed == nil then
-		local cp = l_get_curpos()
-		ed = cp.col - 1
+		local cp = module.get_curpos()
+		tail = cp.col - 1
+	else
+		tail = ed
+	end
+
+	if  tail < st then
+		return ""
 	end
 
 	local ctn = vim.api.nvim_get_current_line()
-	local str = string.sub(ctx, start, ed - 1)
+	if ctn == nil or #ctn <= 0 or #ctn < st then
+		return ""
+	end
+	local str = string.sub(ctn, st, tail)
 	return str
 end
 
 -- row: 都是从1开始
 -- getcurpos: col 从1开始 符合lua的下标
 -- nvim_win_get_cursor: col 从0开始 
-local function l_get_curpos()
+module.get_curpos = function()
 	local pos = vim.api.nvim_call_function('getcurpos', {})
 	return {buf=pos[1], line=pos[2], col=pos[3]}
 end
 
 -- 获取buf的文件类型
-local function l_get_filetype()
-	local pos = l_get_curpos()
+module.get_filetype = function()
+	local pos = module.get_curpos()
 	return vim.api.nvim_buf_get_option(pos['buf'], 'filetype')
 end
 
 -- 获取buf的全路径文件名
-local function l_get_bufname()
+module.get_bufname = function()
 	--return vim.api.nvim_call_function('buffer_name', {'%'})
 	return vim.api.nvim_call_function('expand', {'%:p'})
 end
 
-local function l_complete(start, items)
-    vim.api.nvim_call_function('nvim_completor#on_complete', {start, items})
+module.complete = function(start, items)
+	log.debug("item len")
+	print(items)
+	vim.api.nvim_call_function('nvim_completor#on_complete', {start, items})
 end
 
 
-local function l_dict_len(dict)
+module.dict_len = function(dict)
 	local count = 0
 	for k, v in pairs(dict) do
 		count = count + 1
@@ -68,7 +82,7 @@ local function l_dict_len(dict)
 	return count
 end
 
-local function l_menu_selected()
+module.menu_selected = function()
 	local sl = vim.api.nvim_call_function('nvim_completor#menu_selected', {})
 	if sl == 1 then
 		return true
@@ -78,7 +92,7 @@ end
 
 
 -- 判断字符是不是key字符
-local function l_is_word_char(char)
+module.is_word_char = function(char)
 	--if string.match(char, '[a-zA-Z0-9_]+') == char then
 	if string.match(char, '[%w_]+') == char then
 		return true
@@ -88,7 +102,7 @@ end
 
 
 -- 是否符合首字母模糊匹配
-local function l_is_head_match(str, pattern)
+module.is_head_match = function(str, pattern)
 	slen = str:len()
 	plen = pattern:len()
 	if slen < plen then
@@ -133,7 +147,7 @@ end
 -- @items: table
 -- @pattern:
 -- return: table
-local function l_head_fuzzy_match(items, pattern)
+module.head_fuzzy_match = function(items, pattern)
 	if items == nil or #items == 0 then
 		return {}
 	end
@@ -148,7 +162,7 @@ local function l_head_fuzzy_match(items, pattern)
 	local sortArray = {}
 	for i, v in pairs(items) do
 		local lw = string.lower(v['word'])
-		local pir = l_is_head_match(lw, lp)
+		local pir = module.is_head_match(lw, lp)
 		if  pir ~= 0 then
 			local j = i
 			while(result[pir] ~= nil) do
@@ -172,14 +186,4 @@ local function l_head_fuzzy_match(items, pattern)
 	end
 	return candicates
 end
-
-module.get_cur_line = l_get_cur_line
-module.get_curpos = l_get_curpos
-module.get_filetype = l_get_filetype
-module.get_bufname = l_get_bufname
-module.complete = l_complete
-module.dict_len = l_dict_len
-module.menu_selected = l_menu_selected
-module.head_fuzzy_match = l_head_fuzzy_match
-
 return module

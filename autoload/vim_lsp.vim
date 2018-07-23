@@ -39,6 +39,8 @@ func! vim_lsp#handle_lsp_completion(ctx, data)
 "	else
 "		echo string(a:data)
 "	endif
+"
+	call nvim_completor#log_debug(string(a:data))
 
 	call luaeval("require('complete-engine/vim-lsp').handle_lsp_complete(_A.ctx, _A.data)", {
 				\ "ctx": a:ctx,

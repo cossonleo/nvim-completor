@@ -8,6 +8,7 @@
 --------------------------------------------------
 
 local module = {}
+local private = {}
 
 local lang = require("nvim-completor/lang-spec")
 local context = require("nvim-completor/context")
@@ -15,137 +16,71 @@ local cm = require("nvim-completor/candidate-manager")
 local log = require("nvim-completor/log")
 
 -- 上一次触发补全的上下文
-local l_ctx = nil
+private.ctx = nil
 -- 补全引擎
-local l_complete_engines = {}
+private.complete_engines = {}
 -- incomplete
-local l_incomplete = nil
-
---local function _direct_completion()
---	if api.menu_selected() then
---		return
---	end
---	if items == nil or #items.items == 0 then
---		return
---	end
---
---	local pos = api.get_curpos()
---	local typed = ""
---
---	if pos.col > 1 then
---		typed = vim.api.nvim_get_current_line():sub(1, pos.col - 1)
---	end
---
---	local pattern = string.match(typed, "[%a_][%w_]*$")
---
---	if pattern == nil or last_pattern == nil or string.match(pattern, "^" .. last_pattern) == nil then
---		cache = items.items
---	end
---
---	if pattern ~= nil then
---		cache = fuzzy_match(cache, pattern)
---	end
---	last_pattern = pattern
---	api.complete(items.start, cache)
---	return ''
---end
-
---local function _handle_completion(ctx, data)
---
---	local ctx = context.get_context()
---	if not ctx:eq(last_req_ctx) then
---		last_req_ctx = context.context:new()
---		cache = nil
---		last_pattern = nil
---		items = nil
---		return
---	end
---	cache = items.items
---
---	if items.start == -1 then
---		items.start = string.find(ctx.typed, '[%a_][%w_]*$')
---		if items.start == nil then
---			items.start = ctx.trigger_pos + 1
---		end
---	else
---		items.start = items.start
---	end
---	_direct_completion()
---	--api.complete(items.start, cache)
---	return ''
---end
+private.incomplete = false
 
 -- 添加引擎
-local function e_add_complete_engine(handle)
+module.add_engine = function(handle)
 	if handle == nil then
 		return
 	end
 
-	table.insert(l_complete_engines, handle)
+	table.insert(private.complete_engines, handle)
 	log.debug("new engine add")
 end
 
 -- 添加补全候选
-local function e_add_candidate(ctx, candidates, inc)
+module.add_candidate = function(ctx, candidates, inc)
 	if inc ~= nil and inc == true then
-		l_incomplete.ctx = ctx
+		private.incomplete = true
 	end
 	cm.add_candidate(ctx, candidates)
 end
 
-local function e_text_changed()
+-- triggered when popmenu is not show
+module.text_changed = function()
 	log.debug("text changed")
-	if l_complete_engines == nil or #l_complete_engines == 0 then
-		log.debug("1")
+	if private.complete_engines == nil or #private.complete_engines == 0 then
+		log.debug("text_changed: complete engines is nil")
 		return
 	end
 
 	if lang.get_ft() == nil then
-		log.debug("2")
+		log.debug("text_changed: file type is nil")
 		return
 	end
 
 	local ctx = context.get_cur_ctx()
 	if ctx == nil then -- 终止补全
-		log.debug("3")
-		l_ctx = nil
+		log.debug("text_changed: ctx is nil")
+		private.ctx = nil
+		private.incomplete = false
 		return
 	end
 
-	if context.ctx_is_equal(ctx, l_ctx) == true then
-		if l_incomplete == nil then
-			log.debug("4")
-			return
-		end
-
-		if context.ctx_is_equl(l_incomplete.ctx, ctx) == false then
-			l_incomplete = nil
-			log.debug("5")
-			return
-		end
-
-		l_ctx.col = ctx.end_pos
+	if context.ctx_is_equal(ctx, private.ctx) == false then
+		private.incomplete = false
+		private.ctx = ctx
+	elseif private.incomplete then
+		private.ctx.col = private.ctx.end_pos
 	else
-		l_ctx = ctx
+		module.text_changedp()
+		return
 	end
-
-	l_incomplete = nil
 
 	-- 补全
-	log.debug("start complete")
-	for i, handle in ipairs(l_complete_engines) do
-		log.debug("handle %d", i)
-		handle(l_ctx)
+	for i, handle in ipairs(private.complete_engines) do
+		handle(private.ctx)
 	end
 end
 
-local function e_text_changedp()
+-- triggered when popmenu is show
+module.text_changedp = function()
+	log.debug("text changedp")
 	cm.select_candidate()
 end
-
-module.text_changed = e_text_changed
-module.text_changedp = e_text_changedp
-module.add_candidate = e_add_candidate
-module.add_engine = e_add_complete_engine
 
 return module

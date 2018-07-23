@@ -8,13 +8,15 @@
 --------------------------------------------------
 
 local module = {}
+local private = {}
 
 local helper = require("nvim-completor/helper")
 
-local l_ft = nil
+private.ft = nil
+module.trigger_pos = nil
 
 -- return [start, replace]
-local function l_cfamily_trigger_pos(str)
+private.cfamily_trigger_pos = function(str)
 	local start = 0
 	start = string.find(str, '[%.#][_%w]*$')
 	if start ~= nil then
@@ -36,7 +38,7 @@ local function l_cfamily_trigger_pos(str)
 end
 
 -- return [start, replace]
-local function l_lua_trigger_pos(str)
+private.lua_trigger_pos = function(str)
 	local start = string.find(str, '[%.:][%w_]*$')
 	if start ~= nil then
 		return {start, start + 1}
@@ -49,7 +51,7 @@ local function l_lua_trigger_pos(str)
 	return nil
 end
 
-local function l_go_trigger_pos(str)
+private.go_trigger_pos = function(str)
 	local start = string.find(str, '[%.][%w_]*$')
 	if start ~= nil then
 		return {start, start + 1}
@@ -62,7 +64,7 @@ local function l_go_trigger_pos(str)
 	
 end
 
-local function l_default_trigger_pos(str)
+private.default_trigger_pos = function(str)
 	local start = string.find(str, '[%w_]+')
 	if start ~= nil then
 		return {start, start}
@@ -70,30 +72,26 @@ local function l_default_trigger_pos(str)
 	return nil
 end
 
-local function e_set_ft()
+module.set_ft = function()
 	l_ft = helper.get_filetype()
-	module.trigger_pos = l_default_trigger_pos
+	module.trigger_pos = private.default_trigger_pos
 
 	if l_ft == "lua" then
-		module.trigger_pos = l_lua_trigger_pos
+		module.trigger_pos = private.lua_trigger_pos
 	end
 
 	if l_ft == "c" or l_ft == "cpp" or l_ft == "cc" or l_ft == "h" or l_ft == "hpp" then
-		module.trigger_pos = l_cfamily_trigger_pos
+		module.trigger_pos = private.cfamily_trigger_pos
 	end
 
 	if l_ft == "go" then
-		module.trigger_pos = l_go_trigger_pos
+		module.trigger_pos = private.go_trigger_pos
 	end
 end
 
-local function e_get_ft()
+module.get_ft = function()
 	return l_ft
 end
-
-module.trigger_pos = nil
-module.set_ft = e_set_ft
-module.get_ft = e_get_ft
 
 return module
 
