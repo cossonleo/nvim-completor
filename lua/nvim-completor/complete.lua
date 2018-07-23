@@ -28,6 +28,12 @@ module.add_engine = function(handle)
 		return
 	end
 
+	for i, v in pairs(private.complete_engines) do
+		if v == handle then
+			return
+		end
+	end
+
 	table.insert(private.complete_engines, handle)
 	log.debug("new engine add")
 end
@@ -72,7 +78,7 @@ module.text_changed = function()
 	end
 
 	-- 补全
-	for i, handle in ipairs(private.complete_engines) do
+	for i, handle in pairs(private.complete_engines) do
 		handle(private.ctx)
 	end
 end

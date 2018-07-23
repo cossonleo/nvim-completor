@@ -38,7 +38,6 @@ func! nvim_completor#on_text_changedp()
 endfunc
 
 func! nvim_completor#on_complete(startcol, matchs)
-	echo "hahah"
 	call complete(a:startcol, a:matchs)
 	return ''
 endfunc

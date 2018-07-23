@@ -27,6 +27,8 @@ autocmd InsertEnter * call nvim_completor#on_insert_enter()
 au User lsp_server_init call vim_lsp#server_initialized()
 au User lsp_server_exit call vim_lsp#server_exited()
 
+au FileType go call go_key#complete_engine_reg()
+
 "call lsp_completor#server_initialized()
 
 "augroup ayncomplete

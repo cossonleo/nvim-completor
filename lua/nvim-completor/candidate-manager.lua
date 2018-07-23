@@ -21,7 +21,7 @@ private.last_pattern = nil
 
 -- 触发或更新补全选项
 private.match_complete = function()
-	local str = p_helper.get_cur_line(private.ctx.col)
+	local str = p_helper.get_cur_line(private.ctx.replace_col)
 	log.debug("str: %s", str)
 
 	local pattern = string.match(str, "[%a_][%w_]*$")
@@ -35,10 +35,10 @@ private.match_complete = function()
 	end
 	private.last_pattern = pattern
 
-	--private.candidate_cache = private.candidate
-	log.debug("match candi len %d", #private.candidate_cache)
+	if private.candidate_cache == nil or #private.candidate_cache == 0 then
+		return
+	end
 	p_helper.complete(private.ctx.replace_col, private.candidate_cache)
-	return ''
 end
 
 -- 新的候选
@@ -51,16 +51,21 @@ module.add_candidate = function(ctx, candi)
 		private.ctx = ctx
 		private.candidate = candi
 	else
-		for i, v in ipairs(candi) do
+		for i, v in pairs(candi) do
 			table.insert(private.candidate, v)
 		end
 	end
 
+	private.candidate_cache = private.candidate
 	private.match_complete()
 end
 
 
 module.select_candidate = function()
+	if private.ctx == nil then
+		return
+	end
+
 	private.match_complete()
 end
 

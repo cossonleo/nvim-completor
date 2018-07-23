@@ -39,11 +39,11 @@ module.get_cur_line = function(start, ed)
 		return ""
 	end
 
-	local ctn = vim.api.nvim_get_current_line()
-	if ctn == nil or #ctn <= 0 or #ctn < st then
+	local typed = vim.api.nvim_get_current_line()
+	if typed == nil or #typed <= 0 or #typed < st then
 		return ""
 	end
-	local str = string.sub(ctn, st, tail)
+	local str = string.sub(typed, st, tail)
 	return str
 end
 
