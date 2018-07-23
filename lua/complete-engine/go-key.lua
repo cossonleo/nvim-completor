@@ -46,8 +46,11 @@ private.go_key_complete = function(ctx)
 		return
 	end
 
-	local all_keys = private.get_keys()
 	local typed = helper.get_cur_line(ctx.replace_col)
+	if typed == nil or string.len(typed) == 0 or string.find(typed, "%.[%w_]*$") ~= nil then
+		return
+	end
+	local all_keys = private.get_keys()
 	local candi = helper.head_fuzzy_match(all_keys, typed)
 	cm.add_candidate(ctx, candi)
 	return
