@@ -186,4 +186,26 @@ module.head_fuzzy_match = function(items, pattern)
 	end
 	return candicates
 end
+
+module.table_to_string = function(t)
+	if t == nil then
+		return ""
+	end
+	if type(t) ~= "table" then
+		return ""
+	end
+	if #t == 0 then
+		return "{}"
+	end
+
+	local str = "{ "
+	for i, v in pairs(t) do
+		str = str .. "[" .. i .. "]" .. "=" .. v .. ","
+	end
+
+	local len = string.len(str)
+	str = string.sub(str, 1, len - 1)
+	str = str .. "}"
+	return str
+end
 return module

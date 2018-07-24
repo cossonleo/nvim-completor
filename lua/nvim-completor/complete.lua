@@ -14,6 +14,7 @@ local lang = require("nvim-completor/lang-spec")
 local context = require("nvim-completor/context")
 local cm = require("nvim-completor/candidate-manager")
 local log = require("nvim-completor/log")
+local helper = require("nvim-completor/helper")
 
 -- 上一次触发补全的上下文
 private.ctx = nil
@@ -38,6 +39,7 @@ module.add_engine = function(handle, ...)
 			private.complete_engines["common"] = {}
 		end
 		table.insert(private.complete_engines["common"], handle)
+		log.debug("new engine for common is add")
 		return
 	end
 
@@ -61,6 +63,7 @@ module.add_engine = function(handle, ...)
 			end
 		end
 		table.insert(private.complete_engines, handle)
+		log.debug("new engine for all is add")
 		return
 	end
 
@@ -68,12 +71,19 @@ module.add_engine = function(handle, ...)
 		if type(v) == "string" then
 			if private.complete_engines[v] == nil then
 				private.complete_engines[v] = {}
-				table.insert(private.complete_engines[v], handle)
 			end
+			if #private.complete_engines[v] > 0 then
+				for j, h in pairs(private.complete_engines[v]) do
+					if h == handle then
+						table.remove(private.complete_engines, j)
+					end
+				end
+			end
+			table.insert(private.complete_engines[v], handle)
 		end
 	end
 
-	log.debug("new engine add")
+	log.debug("new engine for %s is add", helper.table_to_string(fts))
 end
 
 -- 添加补全候选

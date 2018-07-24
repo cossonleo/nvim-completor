@@ -1,5 +1,5 @@
 local log = require("nvim-completor/log")
-local vl = require("complete-engine/vim-lsp")
+--local vl = require("complete-engine/vim-lsp")
 
 local lf = {}
 
@@ -12,11 +12,35 @@ lf.pre = function()
 end
 
 function test(param, ...)
-	local m = {"ss", "ddd"}
-	table.remove(m, 2)
-	for i, m in pairs(m) do
-		print(m)
+	local args = { ... }
+	if args[1] == "all" then
+		print("true")
 	end
+	print(args[1])
 end
 
-test("sss")
+local table_to_string = function(t)
+	if t == nil then
+		return ""
+	end
+	if type(t) ~= "table" then
+		return ""
+	end
+	if #t == 0 then
+		return "{}"
+	end
+
+	local str = "{"
+	for i, v in pairs(t) do
+		str = str .. "[" .. i .. "]" .. "=" .. v .. ","
+	end
+
+	local len = string.len(str)
+	local chars = string.byte(str, 1, len)
+	chars[len] = '}'
+	return str
+end
+
+table_to_string({"ssss"})
+
+test("all", "all")
