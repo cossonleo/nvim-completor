@@ -1,10 +1,10 @@
 --------------------------------------------------
---    LICENSE: 
---     Author: 
---    Version: 
+--    LICENSE: MIT
+--     Author: Cosson2017
+--    Version: 0.3
 -- CreateTime: 2018-07-23 15:57:53
 -- LastUpdate: 2018-07-23 15:57:53
---       Desc: key length > 3 show
+--       Desc: go key length > 3 show
 --------------------------------------------------
 
 local module = {}
@@ -56,5 +56,7 @@ private.go_key_complete = function(ctx)
 	return
 end
 
-cm.add_engine(private.go_key_complete)
+cm.add_engine(private.go_key_complete, "go")
 log.debug("add go key complete engine success")
+
+return module

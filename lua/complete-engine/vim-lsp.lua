@@ -179,7 +179,7 @@ private.lsp_complete = function(ctx)
 end
 
 -- 添加引擎到complete中
-ncm.add_engine(private.lsp_complete)
+ncm.add_engine(private.lsp_complete, "all")
 log.debug("add vim-lsp engine success")
 
 return module

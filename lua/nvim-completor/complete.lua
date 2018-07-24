@@ -23,18 +23,56 @@ private.complete_engines = {}
 private.incomplete = false
 
 -- 添加引擎
-module.add_engine = function(handle)
+module.add_engine = function(handle, ...)
 	if handle == nil then
 		return
 	end
 
-	for i, v in pairs(private.complete_engines) do
-		if v == handle then
-			return
+	if type(handle) ~= "function" then
+		return
+	end
+
+	local fts = { ... }
+	if #fts == 0 then
+		if private.complete_engines["common"] == nil then
+			private.complete_engines["common"] = {}
+		end
+		table.insert(private.complete_engines["common"], handle)
+		return
+	end
+
+	if fts[1] == "all" then
+		-- 去重
+		for i, v in pairs(private.complete_engines) do
+			if type(i) == "number" then
+				if handle == v then
+					return
+				end
+			else
+				local handles = private.complete_engines[i]
+				if handles ~= nil and #handles > 0 then
+					for j, h in pairs(handles) do
+						if h == handle then
+							-- 去重
+							table.remove(handles, j)
+						end
+					end
+				end
+			end
+		end
+		table.insert(private.complete_engines, handle)
+		return
+	end
+
+	for i, v in pairs(fts) do
+		if type(v) == "string" then
+			if private.complete_engines[v] == nil then
+				private.complete_engines[v] = {}
+				table.insert(private.complete_engines[v], handle)
+			end
 		end
 	end
 
-	table.insert(private.complete_engines, handle)
 	log.debug("new engine add")
 end
 
@@ -54,10 +92,10 @@ module.text_changed = function()
 		return
 	end
 
-	if lang.get_ft() == nil then
-		log.debug("text_changed: file type is nil")
-		return
-	end
+	--if lang.get_ft() == nil then
+	--	log.debug("text_changed: file type is nil")
+	--	return
+	--end
 
 	local ctx = context.get_cur_ctx()
 	if ctx == nil then -- 终止补全
@@ -78,8 +116,25 @@ module.text_changed = function()
 	end
 
 	-- 补全
-	for i, handle in pairs(private.complete_engines) do
+	for i, handle in ipairs(private.complete_engines) do
 		handle(private.ctx)
+	end
+
+	local handles = nil
+	local cur_ft = lang.get_ft()
+	if cur_ft == nil then
+		handles = private.complete_engines["common"]
+	else
+		handles = private.complete_engines[cur_ft]
+		if handles == nil or #handles == 0 then
+			handles = private.complete_engines["common"]
+		end
+	end
+
+	if handles ~= nil and #handles > 0 then
+		for i, handle in pairs(handles) do
+			handle(private.ctx)
+		end
 	end
 end
 
