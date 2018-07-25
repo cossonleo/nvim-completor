@@ -36,7 +36,7 @@ private.get_keys = function()
 	table.insert(private.keys, {word = "case", abbr = "case", menu = "key", icase = 1, dup = 0})
 	table.insert(private.keys, {word = "switch", abbr = "switch", menu = "key", icase = 1, dup = 0})
 	table.insert(private.keys, {word = "range", abbr = "range", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "func", abbr = "range", menu = "key", icase = 1, dup = 0})
+	table.insert(private.keys, {word = "func", abbr = "func", menu = "key", icase = 1, dup = 0})
 	return private.keys
 end
 
