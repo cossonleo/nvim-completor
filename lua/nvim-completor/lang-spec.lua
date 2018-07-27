@@ -61,7 +61,18 @@ private.go_trigger_pos = function(str)
 		return {start, start}
 	end
 	return nil
-	
+end
+
+private.js_trigger_pos = function(str)
+	local start = string.find(str, '[%.][%w_]*$')
+	if start ~= nil then
+		return {start, start + 1}
+	end
+	start = string.find(str, '[%w_]+$')
+	if start ~= nil then
+		return {start, start}
+	end
+	return nil
 end
 
 private.default_trigger_pos = function(str)
@@ -73,24 +84,28 @@ private.default_trigger_pos = function(str)
 end
 
 module.set_ft = function()
-	l_ft = helper.get_filetype()
+	private.ft = helper.get_filetype()
 	module.trigger_pos = private.default_trigger_pos
 
-	if l_ft == "lua" then
+	if private.ft == "lua" then
 		module.trigger_pos = private.lua_trigger_pos
 	end
 
-	if l_ft == "c" or l_ft == "cpp" or l_ft == "cc" or l_ft == "h" or l_ft == "hpp" then
+	if private.ft == "javascript" then
+		module.trigger_pos = private.js_trigger_pos
+	end
+
+	if private.ft == "c" or private.ft == "cpp" or private.ft == "cc" or private.ft == "h" or private.ft == "hpp" then
 		module.trigger_pos = private.cfamily_trigger_pos
 	end
 
-	if l_ft == "go" then
+	if private.ft == "go" then
 		module.trigger_pos = private.go_trigger_pos
 	end
 end
 
 module.get_ft = function()
-	return l_ft
+	return private.ft
 end
 
 return module

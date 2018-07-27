@@ -165,12 +165,14 @@ module.handle_lsp_complete = function(ctx, data)
 end
 
 private.lsp_complete = function(ctx)
+	log.debug("vim-lsp trigger")
 	if ctx == nil then
 		log.debug("private.lsp_complete ctx is nil")
 		return false
 	end
 	local server_name = private.get_cur_server()
 	if server_name == nil then
+		log.debug("vim-lsp server_name is nil")
 		return false
 	end
 

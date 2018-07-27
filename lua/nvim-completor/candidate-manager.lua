@@ -61,8 +61,8 @@ module.add_candidate = function(ctx, candi)
 end
 
 
-module.select_candidate = function()
-	if private.ctx == nil then
+module.select_candidate = function(ctx)
+	if not p_context.ctx_is_equal(private.ctx, ctx) then
 		return
 	end
 
