@@ -44,7 +44,6 @@ local log = require("nvim-completor/log")
 --table_to_string({"ssss"})
 --
 --test("all", "all")
-
 local ss = function()
 	local str = "hello word dadfas, afdadfsf , afasdfs ,a fasd"
 	for w in string.gmatch(str, "%w+") do

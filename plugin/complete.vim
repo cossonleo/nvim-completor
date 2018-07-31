@@ -24,11 +24,12 @@ autocmd TextChangedI * call nvim_completor#on_text_changed()
 "autocmd InsertLeave * call lsp_completor#on_insert_leave()
 autocmd InsertEnter * call nvim_completor#on_insert_enter()
 "
-au User lsp_server_init call vim_lsp#server_initialized()
-au User lsp_server_exit call vim_lsp#server_exited()
+"au User lsp_server_init call vim_lsp#server_initialized()
+"au User lsp_server_exit call vim_lsp#server_exited()
 
 au FileType go call go_key#complete_engine_reg()
 au FileType lua call lua_key#complete_engine_reg()
+au FileType * call vim_lsc#reg_lsc()
 
 "call lsp_completor#server_initialized()
 
