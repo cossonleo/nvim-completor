@@ -59,7 +59,10 @@ private.lua_key_complete = function(ctx)
 	return
 end
 
-cm.add_engine(private.lua_key_complete, "lua")
-log.debug("add lua key complete engine success")
+private.init = function()
+	cm.add_engine(private.lua_key_complete, "lua")
+	log.debug("add lua key complete engine success")
+end
 
+module.init = private.init
 return module
