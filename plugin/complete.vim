@@ -19,6 +19,6 @@ if exists("g:load_lua_key_complete") == 0
 	let g:load_lua_key_complete = 1
 endif 
 
-if !exists("g:load_go_key_complete") == 0
+if exists("g:load_go_key_complete") == 0
 	let g:load_go_key_complete = 1
 endif
