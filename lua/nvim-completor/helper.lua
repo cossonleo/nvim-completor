@@ -161,7 +161,8 @@ module.head_fuzzy_match = function(items, pattern)
 	local result = {}
 	local sortArray = {}
 	for i, v in pairs(items) do
-		local lw = string.lower(v['word'])
+		--local lw = string.lower(v['word'])
+		local lw = v['word']
 		local pir = module.is_head_match(lw, lp)
 		if  pir ~= 0 then
 			local j = i

@@ -17,8 +17,7 @@ module.trigger_pos = nil
 
 -- return [start, replace]
 private.cfamily_trigger_pos = function(str)
-	local start = 0
-	start = string.find(str, '[%.#][_%w]*$')
+	local start = string.find(str, '[%.#][_%w]*$')
 	if start ~= nil then
 		return {start, start + 1}
 	end
@@ -75,6 +74,27 @@ private.js_trigger_pos = function(str)
 	return nil
 end
 
+private.java_trigger_pos = function(str)
+	local start = string.find(str, '[%.#][_%w]*$')
+	if start ~= nil then
+		return {start, start + 1}
+	end
+	start = string.find(str, '->[%w_]*$')
+	if start ~= nil then
+		return {start + 1, start + 2}
+	end
+	start = string.find(str, '::[%w_]*$')
+	if start ~= nil then
+		return {start + 1, start + 2}
+	end
+	start = string.find(str,'[%w_]+$')
+	if start ~= nil then
+		return {start, start}
+	end
+	return nil
+
+end
+
 private.default_trigger_pos = function(str)
 	local start = string.find(str, '[%w_]+')
 	if start ~= nil then
@@ -101,6 +121,10 @@ module.set_ft = function()
 
 	if private.ft == "go" then
 		module.trigger_pos = private.go_trigger_pos
+	end
+
+	if private.ft == "java" then
+		module.trigger_pos = private.java_trigger_pos
 	end
 end
 
