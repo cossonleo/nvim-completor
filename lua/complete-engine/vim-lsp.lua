@@ -77,8 +77,13 @@ module.handle_lsp_complete = function(ctx, data)
 		return
 	end
 
-	local items = lsp.format_completion(ctx, result)
-	if #items.items == 0 then
+	--local items = lsp.format_completion(ctx, result)
+--	if #items.items == 0 then
+	--	return
+--	end
+
+	local items = lsp.parse_completion_resp(ctx, result)
+	if items == nil or #items.items == 0 then
 		return
 	end
 

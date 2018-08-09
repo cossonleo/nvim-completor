@@ -6,6 +6,9 @@
 " LastUpdate: 2018-07-22 14:15:13
 "       Desc: 
 """"""""""""""""""""""""""""""""""""""""""
+func! vim_lsp#init()
+	call luaeval("require('complete-engine/vim-lsp').init()")
+endfunc
 func! vim_lsp#server_initialized()
 	call luaeval("require('complete-engine/vim-lsp').server_initialized()")
 endfunc

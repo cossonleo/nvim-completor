@@ -7,7 +7,7 @@
 "       Desc: 
 """"""""""""""""""""""""""""""""""""""""""
 
-let g:load_nvim_completor_lsc = get(g:, "load_nvim_completor_lsc", 1)
+let g:load_nvim_completor_lsc = get(g:, "load_nvim_completor_lsc", 0)
 if g:load_nvim_completor_lsc == 0
 	finish
 endif
