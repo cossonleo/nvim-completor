@@ -127,26 +127,22 @@ module.text_changed = function()
 
 	-- 补全
 	for i, handle in ipairs(private.complete_engines) do
-		log.debug("handle 1")
 		handle(private.ctx)
 	end
 
 	local handles = nil
 	local cur_ft = lang.get_ft()
 	if cur_ft == nil then
-		log.debug("handle 2")
 		handles = private.complete_engines["common"]
 	else
 		handles = private.complete_engines[cur_ft]
 		if handles == nil or #handles == 0 then
-			log.debug("handle 3")
 			handles = private.complete_engines["common"]
 		end
 	end
 
 	if handles ~= nil and #handles > 0 then
 		for i, handle in pairs(handles) do
-			log.debug("handle 4")
 			handle(private.ctx)
 		end
 	end

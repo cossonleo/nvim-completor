@@ -68,7 +68,6 @@ module.get_bufname = function()
 end
 
 module.complete = function(start, items)
-	log.debug("item len")
 	print(items)
 	vim.api.nvim_call_function('nvim_completor#on_complete', {start, items})
 end
@@ -156,7 +155,8 @@ module.head_fuzzy_match = function(items, pattern)
 		return items
 	end
 
-	local lp = string.lower(pattern)
+	--local lp = string.lower(pattern)
+	local lp = pattern
 
 	local result = {}
 	local sortArray = {}

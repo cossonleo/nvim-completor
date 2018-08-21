@@ -41,7 +41,6 @@ private.get_keys = function()
 end
 
 private.go_key_complete = function(ctx)
-	log.debug("go key cm trigger")
 	local ft = helper.get_filetype()
 	if ft == nil and ft ~= "go" then
 		return

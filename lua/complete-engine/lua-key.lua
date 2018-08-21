@@ -43,7 +43,6 @@ private.get_keys = function()
 end
 
 private.lua_key_complete = function(ctx)
-	log.debug("lua key trigger")
 	local ft = helper.get_filetype()
 	if ft == nil and ft ~= "lua" then
 		return

@@ -22,8 +22,6 @@ private.last_pattern = nil
 -- 触发或更新补全选项
 private.match_complete = function()
 	local str = p_helper.get_cur_line(private.ctx.replace_col)
-	log.debug("str: %s", str)
-
 	local pattern = string.match(str, "[%a_][%w_]*$")
 
 	if pattern == nil or private.last_pattern == nil or string.match(pattern, "^" .. private.last_pattern) == nil then

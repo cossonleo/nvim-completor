@@ -91,7 +91,6 @@ module.handle_lsp_complete = function(ctx, data)
 end
 
 private.lsp_complete = function(ctx)
-	log.debug("vim-lsp trigger")
 	if ctx == nil then
 		log.debug("private.lsp_complete ctx is nil")
 		return false
