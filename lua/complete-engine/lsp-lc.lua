@@ -1,17 +1,17 @@
 --------------------------------------------------
---    LICENSE: 
---     Author: 
---    Version: 
+--    LICENSE: MIT
+--     Author: Cosson2017
+--    Version: 0.1
 -- CreateTime: 2018-09-26 15:08:02
 -- LastUpdate: 2018-09-26 15:08:02
---       Desc: 
+--       Desc: LanguageClient-neovim
 --------------------------------------------------
 
 local module = {}
 local private = {}
 
 local ncm = require("nvim-completor/complete")
-local helper = require("nvim-completor/helper")
+--local helper = require("nvim-completor/helper")
 local log = require("nvim-completor/log")
 local lsp = require("nvim-completor/lsp-format")
 

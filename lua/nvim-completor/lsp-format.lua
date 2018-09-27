@@ -157,6 +157,9 @@ private.parse_completion_resp = function(ctx, data)
 	local inc = data['isIncomplete']
 
 	local result = data['items']
+	if result == nil then
+		result = data
+	end
 	for k, v in pairs(result) do
 		local item = private.format_item(ctx, v)
 		table.insert(items, item)
