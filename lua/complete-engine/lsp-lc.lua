@@ -35,13 +35,22 @@ private.complete_callback = function(ctx, data)
 		return
 	end
 	local result = data['result']
-
-	local items = lsp.parse_completion_resp(ctx, result)
-	if items == nil or #items.items == 0 then
+	if result == nil then
 		return
 	end
 
-	ncm.add_candidate(ctx, items.items, items.inc)
+	local incomplete = result['isIncomplete']
+	local data_items = result['items']
+	if data_items == nil then
+		data_items = result
+	end
+
+	local complete_items = lsp.parse_completion_resp(ctx, data_items)
+	if complete_items == nil then
+		return
+	end
+
+	ncm.add_candidate(ctx, complete_items, incomplete)
 end
 
 private.init = function()

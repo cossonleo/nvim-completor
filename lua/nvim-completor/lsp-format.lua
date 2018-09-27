@@ -79,33 +79,33 @@ private.format_item = function(ctx, item)
 end
 
 
-private.format_completion = function(ctx, data)
-	if data == nil then
-		return 
-	end
-
-	if data['error'] ~= nil then
-		return
-	end
-	if data['response'] == nil then
-		return
-	end
-
-	local result = data['response']['result']
-	if result == nil then
-		return
-	end
-
-	local items = {}
-	local inc = result['isIncomplete']
-
-	result = result['items']
-	for k, v in pairs(result) do
-		local item = private.format_item(ctx, v)
-		table.insert(items, item)
-	end
-	return {items = items, inc = inc}
-end
+--private.format_completion = function(ctx, data)
+--	if data == nil then
+--		return 
+--	end
+--
+--	if data['error'] ~= nil then
+--		return
+--	end
+--	if data['response'] == nil then
+--		return
+--	end
+--
+--	local result = data['response']['result']
+--	if result == nil then
+--		return
+--	end
+--
+--	local items = {}
+--	local inc = result['isIncomplete']
+--
+--	result = result['items']
+--	for k, v in pairs(result) do
+--		local item = private.format_item(ctx, v)
+--		table.insert(items, item)
+--	end
+--	return {items = items, inc = inc}
+--end
 
 private.get_kind_text = function(index)
 	if index == nil then
@@ -154,17 +154,17 @@ end
 
 private.parse_completion_resp = function(ctx, data)
 	local items = {}
-	local inc = data['isIncomplete']
+	--local inc = data['isIncomplete']
 
-	local result = data['items']
-	if result == nil then
-		result = data
-	end
-	for k, v in pairs(result) do
+	--local result = data['items']
+	--if result == nil then
+	--	result = data
+	--end
+	for k, v in pairs(data) do
 		local item = private.format_item(ctx, v)
 		table.insert(items, item)
 	end
-	return {items = items, inc = inc}
+	return items
 end
 
 module.parse_completion_resp = private.parse_completion_resp
