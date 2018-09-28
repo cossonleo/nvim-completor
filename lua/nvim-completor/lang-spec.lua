@@ -13,124 +13,80 @@ local private = {}
 local helper = require("nvim-completor/helper")
 
 private.ft = nil
-module.trigger_pos = nil
 
--- return [start, replace]
-private.cfamily_trigger_pos = function(str)
-	local start = string.find(str, '[%.#][_%w]*$')
-	if start ~= nil then
-		return {start, start + 1}
+private.lang_trigger_pattern = {
+	cpp = {"->", "::", "#", "."},
+	c = {"->", "::", "#", "."},
+	rust = {".", "::"},
+	lua = {".", ":"},
+	go = {"."},
+	javascript = {".", "$"},
+	php = {".", "->"},
+	html = {"<"},
+}
+private.lang_trigger_pattern["cpp"] = {"->", "::", "#", "."}
+
+private.covert2pattern = function(str)
+	if str == "." then
+		return "%.$"
+	elseif str == "$" then
+		return "%$$"
 	end
-	start = string.find(str, '->[%w_]*$')
-	if start ~= nil then
-		return {start + 1, start + 2}
-	end
-	start = string.find(str, '::[%w_]*$')
-	if start ~= nil then
-		return {start + 1, start + 2}
-	end
-	start = string.find(str,'[%w_]+$')
-	if start ~= nil then
-		return {start, start}
-	end
-	return nil
+
+	return str .. "$"
 end
 
 -- return [start, replace]
-private.lua_trigger_pos = function(str)
-	local start = string.find(str, '[%.:][%w_]*$')
-	if start ~= nil then
-		return {start, start + 1}
+private.lang_trigger_pos_info = function(str)
+	local trigger_patterns = private.lang_trigger_pattern[private.ft]
+	for _, sub in ipairs(trigger_patterns) do
+		local offset = string.len(sub) - 1
+		local pattern = private.covert2pattern(sub)
+		local start = string.find(str, pattern)
+		if start ~= nil then
+			return {start + offset, start + offset + 1}
+		end
 	end
 
-	start = string.find(str, '[%w_]+$')
+	local start = string.find(str,'[%w_]+$')
 	if start ~= nil then
 		return {start, start}
 	end
 	return nil
 end
 
-private.go_trigger_pos = function(str)
-	local start = string.find(str, '[%.][%w_]*$')
+-- return {trigger_pos, complete_start_pos}
+private.default_trigger_pos_info = function(str)
+	local start = string.find(str, '[%.][_%w]*$')
 	if start ~= nil then
 		return {start, start + 1}
 	end
-	start = string.find(str, '[%w_]+$')
+
+	start = string.find(str, '[%w_]+')
 	if start ~= nil then
 		return {start, start}
 	end
+
 	return nil
 end
 
-private.js_trigger_pos = function(str)
-	local start = string.find(str, '[%.][%w_]*$')
-	if start ~= nil then
-		return {start, start + 1}
+private.trigger_pos_info = function(str)
+	local trigger_patterns = private.lang_trigger_pattern[private.ft]
+	if trigger_patterns == nil then
+		private.default_trigger_pos_info(str)
 	end
-	start = string.find(str, '[%w_]+$')
-	if start ~= nil then
-		return {start, start}
-	end
-	return nil
-end
-
-private.java_trigger_pos = function(str)
-	local start = string.find(str, '[%.#][_%w]*$')
-	if start ~= nil then
-		return {start, start + 1}
-	end
-	start = string.find(str, '->[%w_]*$')
-	if start ~= nil then
-		return {start + 1, start + 2}
-	end
-	start = string.find(str, '::[%w_]*$')
-	if start ~= nil then
-		return {start + 1, start + 2}
-	end
-	start = string.find(str,'[%w_]+$')
-	if start ~= nil then
-		return {start, start}
-	end
-	return nil
-
-end
-
-private.default_trigger_pos = function(str)
-	local start = string.find(str, '[%w_]+')
-	if start ~= nil then
-		return {start, start}
-	end
-	return nil
+	return private.lang_trigger_pos_info(str)
 end
 
 module.set_ft = function()
 	private.ft = helper.get_filetype()
-	module.trigger_pos = private.default_trigger_pos
-
-	if private.ft == "lua" then
-		module.trigger_pos = private.lua_trigger_pos
-	end
-
-	if private.ft == "javascript" then
-		module.trigger_pos = private.js_trigger_pos
-	end
-
-	if private.ft == "c" or private.ft == "cpp" or private.ft == "cc" or private.ft == "h" or private.ft == "hpp" then
-		module.trigger_pos = private.cfamily_trigger_pos
-	end
-
-	if private.ft == "go" then
-		module.trigger_pos = private.go_trigger_pos
-	end
-
-	if private.ft == "java" then
-		module.trigger_pos = private.java_trigger_pos
-	end
 end
 
 module.get_ft = function()
 	return private.ft
 end
+
+module.trigger_pos = private.trigger_pos_info
 
 return module
 
