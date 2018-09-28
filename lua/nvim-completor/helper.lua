@@ -68,7 +68,7 @@ module.get_bufname = function()
 end
 
 module.complete = function(start, items)
-	print(items)
+	--print(items)
 	vim.api.nvim_call_function('nvim_completor#on_complete', {start, items})
 end
 
