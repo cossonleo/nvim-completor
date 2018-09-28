@@ -36,21 +36,21 @@ private.covert2pattern = function(str)
 	return str .. "$"
 end
 
--- return [start, replace]
+-- return start, replace
 private.lang_trigger_pos_info = function(str)
 	local trigger_patterns = private.lang_trigger_pattern[private.ft]
 	for _, sub in ipairs(trigger_patterns) do
-		local offset = string.len(sub) - 1
+		local offset = string.len(sub)
 		local pattern = private.covert2pattern(sub)
 		local start = string.find(str, pattern)
 		if start ~= nil then
-			return {start + offset, start + offset + 1}
+			return start + offset - 1, start + offset
 		end
 	end
 
 	local start = string.find(str,'[%w_]+$')
 	if start ~= nil then
-		return {start, start}
+		return start, start
 	end
 	return nil
 end
@@ -59,12 +59,12 @@ end
 private.default_trigger_pos_info = function(str)
 	local start = string.find(str, '[%.][_%w]*$')
 	if start ~= nil then
-		return {start, start + 1}
+		return start, start + 1
 	end
 
 	start = string.find(str, '[%w_]+')
 	if start ~= nil then
-		return {start, start}
+		return start, start
 	end
 
 	return nil

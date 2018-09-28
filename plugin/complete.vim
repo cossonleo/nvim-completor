@@ -15,10 +15,3 @@ autocmd TextChangedP * call nvim_completor#on_text_changedp()
 autocmd TextChangedI * call nvim_completor#on_text_changed()
 autocmd InsertEnter * call nvim_completor#on_insert_enter()
 
-if exists("g:load_lua_key_complete") == 0
-	let g:load_lua_key_complete = 1
-endif 
-
-if exists("g:load_go_key_complete") == 0
-	let g:load_go_key_complete = 1
-endif

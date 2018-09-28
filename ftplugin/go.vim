@@ -6,7 +6,7 @@
 " LastUpdate: 2018-08-01 12:20:21
 "       Desc: 
 """"""""""""""""""""""""""""""""""""""""""
-if g:load_go_key_complete == 0
+if exists("g:load_lua_key_complete") != 0 && g:load_go_key_complete == 0
 	finish
 endif
 

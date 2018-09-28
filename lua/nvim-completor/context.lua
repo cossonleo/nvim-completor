@@ -20,8 +20,8 @@ module.get_cur_ctx = function()
 		return nil
 	end
 	local typed = vim.api.nvim_get_current_line():sub(1, pos.col - 1)
-	local complete_col = lang.trigger_pos(typed)
-	if complete_col == nil then
+	local fire_pos, replace_start = lang.trigger_pos(typed)
+	if fire_pos == nil or replace_start == nil then
 		return nil
 	end
 
@@ -29,8 +29,8 @@ module.get_cur_ctx = function()
 	cur_ctx.bname = helper.get_bufname()
 	cur_ctx.bno = pos.buf
 	cur_ctx.line = pos.line
-	cur_ctx.col = complete_col[1] -- 触发补全开始位置
-	cur_ctx.replace_col = complete_col[2] -- 候选开始位置
+	cur_ctx.col = fire_pos -- 触发补全开始位置
+	cur_ctx.replace_col = replace_start -- 候选开始位置
 	cur_ctx.end_pos = pos.col - 1 -- 当前光标前一个位置
 
 	return cur_ctx
