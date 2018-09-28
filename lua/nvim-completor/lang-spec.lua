@@ -73,7 +73,7 @@ end
 private.trigger_pos_info = function(str)
 	local trigger_patterns = private.lang_trigger_pattern[private.ft]
 	if trigger_patterns == nil then
-		private.default_trigger_pos_info(str)
+		return private.default_trigger_pos_info(str)
 	end
 	return private.lang_trigger_pos_info(str)
 end
