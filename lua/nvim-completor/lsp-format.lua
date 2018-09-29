@@ -11,6 +11,7 @@ local module = {}
 local private = {}
 
 local log = require("nvim-completor/log")
+local fuzzy = require("nvim-completor/fuzzy-match")
 
 private.kind_text_mappings = {
             'text',
@@ -131,10 +132,11 @@ private.parse_completion_resp = function(ctx, data)
 	--if result == nil then
 	--	result = data
 	--end
-	for k, v in pairs(data) do
+	for _, v in pairs(data) do
 		local item = private.format_item(ctx, v)
 		table.insert(items, item)
 	end
+
 	return items
 end
 

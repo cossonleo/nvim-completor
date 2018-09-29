@@ -43,7 +43,7 @@ func! nvim_completor#on_complete(startcol, matchs)
 endfunc
 
 func! nvim_completor#menu_selected()
-	if pumvisible() && !empty(v:completed_item)
+	if pumvisible() "&& !empty(v:completed_item)
 		return 1
 	endif
 	return 0

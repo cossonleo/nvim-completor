@@ -13,6 +13,7 @@ local private = {}
 local cm = require("nvim-completor/complete")
 local helper = require("nvim-completor/helper")
 local log = require("nvim-completor/log")
+local head_match = require("nvim-completor/head-fuzzy-match")
 
 private.keys = nil
 
@@ -54,8 +55,9 @@ private.go_key_complete = function(ctx)
 		return
 	end
 	local all_keys = private.get_keys()
-	local candi = helper.head_fuzzy_match(all_keys, typed)
-	cm.add_candidate(ctx, candi)
+
+	local matchs = head_match.simple_match(all_keys, typed)
+	cm.add_candidate(ctx, matchs)
 	return
 end
 

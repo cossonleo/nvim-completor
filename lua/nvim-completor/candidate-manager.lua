@@ -13,6 +13,7 @@ local private = {}
 local p_context = require("nvim-completor/context")
 local p_helper = require("nvim-completor/helper")
 local log = require("nvim-completor/log")
+local fuzzy = require("nvim-completor/fuzzy-match")
 
 private.ctx = nil -- 当前上下文环境
 private.candidate = {} -- 当前候选
@@ -29,7 +30,8 @@ private.match_complete = function()
 	end
 
 	if pattern ~= nil then
-		private.candidate_cache = p_helper.head_fuzzy_match(private.candidate_cache, pattern)
+		--private.candidate_cache = p_helper.head_fuzzy_match(private.candidate_cache, pattern)
+		private.candidate_cache = fuzzy.filter_completion_items(pattern, private.candidate_cache)
 	end
 	private.last_pattern = pattern
 
