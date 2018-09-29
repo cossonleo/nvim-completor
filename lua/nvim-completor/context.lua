@@ -9,6 +9,7 @@
 --
 local helper = require("nvim-completor/helper")
 local lang = require("nvim-completor/lang-spec")
+local log = require("nvim-completor/log")
 
 local module = {}
 local private = {}

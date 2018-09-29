@@ -9,10 +9,12 @@
 
 local module = {}
 
+local log = require("nvim-completor/log")
+
 module.filter_completion_items = function (prefix, matches)
     local result = {}
     local unsorted_matches = {}
-    for i = 0, #matches - 1 do
+    for i = 1, #matches do
         local match = matches[i]
         if match ~= nil then
             local word = match['word']

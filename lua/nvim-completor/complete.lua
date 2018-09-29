@@ -23,6 +23,12 @@ private.complete_engines = {}
 -- incomplete
 private.incomplete = false
 
+-- 重置状态
+private.reset = function()
+	private.ctx = nil
+	private.incomplete = false
+end
+
 -- 添加引擎
 module.add_engine = function(handle, ...)
 	if handle == nil then
@@ -67,7 +73,7 @@ module.add_engine = function(handle, ...)
 		return
 	end
 
-	for i, v in pairs(fts) do
+	for _, v in pairs(fts) do
 		if type(v) == "string" then
 			if private.complete_engines[v] == nil then
 				private.complete_engines[v] = {}
@@ -102,11 +108,6 @@ module.text_changed = function()
 		return
 	end
 
-	--if lang.get_ft() == nil then
-	--	log.debug("text_changed: file type is nil")
-	--	return
-	--end
-
 	local ctx = context.get_cur_ctx()
 	if ctx == nil then -- 终止补全
 		log.debug("text_changed: ctx is nil")
@@ -121,12 +122,13 @@ module.text_changed = function()
 	elseif private.incomplete then
 		private.ctx.col = private.ctx.end_pos
 	else
-		module.text_changedp(ctx)
+		cm.rematch_cdandidate(private.ctx)
 		return
 	end
 
+	cm.reset()
 	-- 补全
-	for i, handle in ipairs(private.complete_engines) do
+	for _, handle in ipairs(private.complete_engines) do
 		handle(private.ctx)
 	end
 
@@ -142,16 +144,21 @@ module.text_changed = function()
 	end
 
 	if handles ~= nil and #handles > 0 then
-		for i, handle in pairs(handles) do
+		for _, handle in pairs(handles) do
 			handle(private.ctx)
 		end
 	end
 end
 
 -- triggered when popmenu is show
-module.text_changedp = function(ctx)
+module.text_changedp = function()
 	log.debug("text changedp")
-	cm.select_candidate(ctx)
+	cm.rematch_cdandidate(private.ctx)
+end
+
+module.reset = function()
+	cm.reset()
+	private.reset()
 end
 
 return module

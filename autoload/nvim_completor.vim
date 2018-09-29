@@ -9,9 +9,9 @@
 "let s:log_level = get(g: "nvim_completor_log_level", 2)
 
 
-"func! nvim_completor#on_insert_leave()
-"	call luaeval("require('nvim-completor/complete').reset_default()")
-"endfunc
+func! nvim_completor#on_insert_leave()
+	call luaeval("require('nvim-completor/complete').reset()")
+endfunc
 
 
 func! nvim_completor#on_insert_enter()
@@ -31,19 +31,21 @@ func! nvim_completor#on_text_changed()
 endfunc
 
 func! nvim_completor#on_text_changedp()
-	if nvim_completor#menu_selected() == 1
+	if !empty(v:completed_item)
 		return
 	endif
 	call luaeval("require('nvim-completor/complete').text_changedp()")
 endfunc
 
 func! nvim_completor#on_complete(startcol, matchs)
-	call complete(a:startcol, a:matchs)
+	if mode() == "i" || mode() == "ic" || mode() == "ix"
+		call complete(a:startcol, a:matchs)
+	endif
 	return ''
 endfunc
 
 func! nvim_completor#menu_selected()
-	if pumvisible() "&& !empty(v:completed_item)
+	if pumvisible() && !empty(v:completed_item)
 		return 1
 	endif
 	return 0

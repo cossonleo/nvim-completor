@@ -14,4 +14,4 @@ let g:nvim_completor_load = 1
 autocmd TextChangedP * call nvim_completor#on_text_changedp()
 autocmd TextChangedI * call nvim_completor#on_text_changed()
 autocmd InsertEnter * call nvim_completor#on_insert_enter()
-
+autocmd InsertLeave * call nvim_completor#on_insert_leave()
