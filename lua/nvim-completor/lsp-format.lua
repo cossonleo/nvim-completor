@@ -114,9 +114,14 @@ private.format_item = function(ctx, item)
 	end
 
 	-- 当前不考虑start > ctx.col情况, 如果需要再进行处理
+	-- start 从零开始
+	-- replace_col 从一开始
+	-- lua的下标从一开始
 	if start ~= -1 then
-		if start < ctx.replace_col then
-			word = string.sub(word, ctx.replace_col - start - 1)
+		if start + 1 < ctx.replace_col then
+			--word = string.sub(word, ctx.replace_col - start - 1)
+			word = string.sub(word, ctx.replace_col - start)
+			--word = string.sub(word, ctx.replace_col - start + 1)
 		end
 	end
 

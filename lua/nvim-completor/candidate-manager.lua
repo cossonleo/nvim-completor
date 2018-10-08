@@ -38,15 +38,17 @@ end
 
 -- 触发或更新补全选项
 private.trigger_complete = function(is_changedp)
-	local str = p_helper.get_cur_line(private.ctx.replace_col)
-	local pattern = string.match(str, "[%a_][%w_]*$")
+	--local str = p_helper.get_cur_line(private.ctx.replace_col)
+	--local pattern = string.match(str, "[%a_][%w_]*$")
+	local pattern = p_helper.get_cur_line(private.ctx.replace_col)
 
 	if is_changedp and pattern ~= nil and private.last_pattern ~= nil and pattern == private.last_pattern then
 		return
 	end
 
 	--log.debug("origin candi: %s", private.print_t(private.candidate))
-	if pattern == nil or private.last_pattern == nil or string.match(pattern, "^" .. private.last_pattern) == nil then
+	--if pattern == nil or private.last_pattern == nil or string.match(pattern, "^" .. private.last_pattern) == nil then
+	if pattern == nil or private.last_pattern == nil or p_helper.has_prefix(pattern, private.last_pattern) == nil then
 		private.candidate_cache = private.candidate
 	end
 	if #private.candidate_cache == 0 then

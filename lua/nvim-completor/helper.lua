@@ -99,6 +99,25 @@ module.is_word_char = function(char)
 	return false
 end
 
+module.has_prefix = function(str, pre)
+	if str == nil or pre == nil then
+		return false
+	end
+	
+	if #str < #pre then
+		return false
+	end
+
+	for i = 1, #pre, 1 do
+		local sc = string.sub(str, i, i)
+		local pc = string.sub(pre, i, i)
+		if sc ~= pc then
+			return false
+		end
+	end
+	return true
+end
+
 module.table_to_string = function(t)
 	if t == nil then
 		return ""
