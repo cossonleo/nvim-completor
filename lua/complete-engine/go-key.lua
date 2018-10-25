@@ -40,6 +40,7 @@ private.get_keys = function()
 	table.insert(private.keys, {word = "func", abbr = "func", menu = "key", icase = 1, dup = 0})
 	table.insert(private.keys, {word = "defer", abbr = "defer", menu = "key", icase = 1, dup = 0})
 	table.insert(private.keys, {word = "else", abbr = "else", menu = "key", icase = 1, dup = 0})
+	table.insert(private.keys, {word = "default", abbr = "else", menu = "key", icase = 1, dup = 0})
 	table.insert(private.keys, {word = "iota", abbr = "iota", menu = "key", icase = 1, dup = 0})
 	return private.keys
 end
