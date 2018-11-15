@@ -31,9 +31,6 @@ private.complete = function(ctx)
 end
 
 private.complete_callback = function(ctx, data)
-	if data['result'] == nil then
-		return
-	end
 	local result = data['result']
 	if result == nil then
 		return
@@ -44,7 +41,9 @@ private.complete_callback = function(ctx, data)
 	if data_items == nil then
 		data_items = result
 	end
-
+	if #data_items == 0 then
+		return
+	end
 	local complete_items = lsp.parse_completion_resp(ctx, data_items)
 	if complete_items == nil then
 		return
