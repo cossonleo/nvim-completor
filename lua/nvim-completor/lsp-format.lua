@@ -75,9 +75,10 @@ private.format_item = function(ctx, item)
 		-- lsp range pos: zero-base
 		start = item['textEdit']['range']['start']['character'] + 1
 	else
-		start = lang.gener_complete_start(ctx.col)
-		if start < 1 then
-			start = 1
+		start = lang.fire_postion(ctx.col)
+		log.debug("start: %d", start)
+		if start == 0 then
+			return nil
 		end
     end
 	if item['detail'] ~= nil then
@@ -89,6 +90,7 @@ private.format_item = function(ctx, item)
 	end
 
 	local comp_start = ctx.col + 1
+	log.debug("cs: %d", comp_start)
 	if comp_start < start then
 		return nil
 	end
@@ -104,7 +106,9 @@ private.parse_completion_resp = function(ctx, data)
 	local items = {}
 	for _, v in pairs(data) do
 		local item = private.format_item(ctx, v)
-		table.insert(items, item)
+		if item ~= nil then
+			table.insert(items, item)
+		end
 	end
 
 	return items

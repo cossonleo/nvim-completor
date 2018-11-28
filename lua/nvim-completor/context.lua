@@ -36,15 +36,9 @@ module.get_cur_ctx = function()
 	--cur_ctx.replace_col = replace_start -- 候选开始位置
 	--cur_ctx.end_pos = pos.col - 1 -- 当前光标前一个位置
 	
-	local fire = false
-	if lang.gener_complete_start(cur_ctx.col) > 1 then
-		fire = true
-	end
-	
-	if fire == false then 
+	if lang.fire_complete(cur_ctx.col) == false then
 		return nil
 	end
-
 	return cur_ctx
 end
 
@@ -69,7 +63,7 @@ module.is_sub_ctx = function(src_ctx, sub_ctx)
 		return false
 	end
 	
-	local line = helper.get_cur_line(src_ctx.col, sub_ctx.col + 1)
+	local line = helper.get_cur_line(src_ctx.col, sub_ctx.col)
 	return helper.is_word(line)
 end
 

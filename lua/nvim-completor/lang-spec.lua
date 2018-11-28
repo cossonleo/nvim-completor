@@ -44,30 +44,30 @@ private.lang_trigger_pos_info = function(str)
 		local pattern = private.covert2pattern(sub)
 		local start = string.find(str, pattern)
 		if start ~= nil then
-			return start + offset - 1, start + offset
+			return start + offset
 		end
 	end
 
 	local start = string.find(str,'[%w_]+$')
 	if start ~= nil then
-		return start, start
+		return start
 	end
-	return nil, nil
+	return nil
 end
 
 -- return {trigger_pos, complete_start_pos}
 private.default_trigger_pos_info = function(str)
-	local start = string.find(str, '[%.][_%w]*$')
+	local start = string.find(str, '%.$')
 	if start ~= nil then
-		return start, start + 1
+		return start + 1
 	end
 
 	start = string.find(str, '[%w_]+')
 	if start ~= nil then
-		return start, start
+		return start
 	end
 
-	return nil, nil
+	return nil
 end
 
 private.trigger_pos_info = function(str)
@@ -86,12 +86,47 @@ module.get_ft = function()
 	return private.ft
 end
 
+-- return bool
+-- 是否触发补全
+module.fire_complete = function(col)
+	if col < 1 then
+		return false
+	end
+
+	if module.fire_postion(col) == 0 then
+		return false
+	end
+
+	return true
+end
+
+-- return num
+-- 触发位置
+module.fire_postion = function(col)
+	if col < 1 then
+		return 0
+	end
+	local typed = helper.get_cur_line(0, col)
+	if typed == nil or #typed == 0 then
+		return 0
+	end
+
+	local pos = private.trigger_pos_info(typed)
+	if pos == nil then
+		return 0
+	end
+	if pos <= 0 then
+		return 0
+	end
+	return pos
+end
+
 --module.trigger_pos = private.trigger_pos_info
 module.gener_complete_start = function(col)
 	if col == 1 then
 		return 0
 	end
-	local typed = helper.get_cur_line(0, col + 1)
+	local typed = helper.get_cur_line(0, col)
 	if typed == nil or #typed == 0 then
 		return 0
 	end

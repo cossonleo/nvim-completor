@@ -16,7 +16,7 @@ local log = require("nvim-completor/log")
 -- 获取当前行内容
 -- start：开始列 如果nil，则设置为1
 -- ed：结束列 如果nil, 则设置为到光标前一个位置
--- [start, ed)
+-- [start, ed]
 -- return: str
 module.get_cur_line = function(start, ed)
 	-- nvim_get_current_buf()
@@ -47,9 +47,10 @@ module.get_cur_line = function(start, ed)
 	return str
 end
 
--- [1, ed]
+-- capture end [1, ed]
 module.get_line_last_word = function(ed)
-	local typed = module.get_cur_line(1, ed+1)
+	-- [1, ed]
+	local typed = module.get_cur_line(1, ed)
 	return string.match(typed, '[%w_]$')
 end
 
