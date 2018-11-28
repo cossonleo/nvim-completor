@@ -58,6 +58,9 @@ private.go_key_complete = function(ctx)
 	local all_keys = private.get_keys()
 
 	local matchs = head_match.simple_match(all_keys, typed)
+	for _, match in ipairs(matchs) do
+		match.word = string.sub(match.word, #typed + 1)
+	end
 	cm.add_candidate(ctx, matchs)
 	return
 end
