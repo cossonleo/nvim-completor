@@ -20,6 +20,7 @@ module.get_cur_ctx = function()
 	if pos.col <= 1 then
 		return nil
 	end
+
 	--local typed = vim.api.nvim_get_current_line():sub(1, pos.col - 1)
 	--local fire_pos, replace_start = lang.trigger_pos(typed)
 	--if fire_pos == nil or replace_start == nil then
@@ -34,6 +35,15 @@ module.get_cur_ctx = function()
 	--cur_ctx.col = fire_pos -- 触发补全开始位置
 	--cur_ctx.replace_col = replace_start -- 候选开始位置
 	--cur_ctx.end_pos = pos.col - 1 -- 当前光标前一个位置
+	
+	local fire = false
+	if lang.gener_complete_start(cur_ctx.col) > 1 then
+		fire = true
+	end
+	
+	if fire == false then 
+		return nil
+	end
 
 	return cur_ctx
 end

@@ -51,7 +51,7 @@ private.go_key_complete = function(ctx)
 		return
 	end
 
-	local typed = helper.get_line_last_word()
+	local typed = helper.get_line_last_word(ctx.col)
 	if typed == nil or string.len(typed) == 0 then
 		return
 	end

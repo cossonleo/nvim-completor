@@ -12,6 +12,7 @@ local private = {}
 
 local log = require("nvim-completor/log")
 local fuzzy = require("nvim-completor/fuzzy-match")
+local lang = require("nvim-completor/lang-spec")
 
 private.kind_text_mappings = {
             'text',
@@ -73,6 +74,11 @@ private.format_item = function(ctx, item)
 		word = item['textEdit']['newText']
 		-- lsp range pos: zero-base
 		start = item['textEdit']['range']['start']['character'] + 1
+	else
+		start = lang.gener_complete_start(ctx.col)
+		if start < 1 then
+			start = 1
+		end
     end
 	if item['detail'] ~= nil then
 		abbr = abbr .. ' ' .. item['detail']

@@ -52,7 +52,7 @@ private.lang_trigger_pos_info = function(str)
 	if start ~= nil then
 		return start, start
 	end
-	return nil
+	return nil, nil
 end
 
 -- return {trigger_pos, complete_start_pos}
@@ -67,7 +67,7 @@ private.default_trigger_pos_info = function(str)
 		return start, start
 	end
 
-	return nil
+	return nil, nil
 end
 
 private.trigger_pos_info = function(str)
@@ -86,7 +86,21 @@ module.get_ft = function()
 	return private.ft
 end
 
-module.trigger_pos = private.trigger_pos_info
+--module.trigger_pos = private.trigger_pos_info
+module.gener_complete_start = function(col)
+	if col == 1 then
+		return 0
+	end
+	local typed = helper.get_cur_line(0, col + 1)
+	if typed == nil or #typed == 0 then
+		return 0
+	end
+	local _, compl_start = private.trigger_pos_info(typed)
+	if compl_start == nil then
+		return 0
+	end
+	return compl_start
+end
 
 return module
 

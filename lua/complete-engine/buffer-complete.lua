@@ -63,7 +63,7 @@ end
 private.buffer_complete = function(ctx)
 	log.debug("buffer cm trigger")
 
-	local typed = helper.get_line_last_word()
+	local typed = helper.get_line_last_word(ctx.col)
 	if typed == nil or string.len(typed) == 0 then
 		private.refresh_words()
 		return

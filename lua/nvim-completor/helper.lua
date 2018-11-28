@@ -47,8 +47,9 @@ module.get_cur_line = function(start, ed)
 	return str
 end
 
-module.get_line_last_word = function()
-	local typed = vim.api.nvim_get_current_line()
+-- [1, ed]
+module.get_line_last_word = function(ed)
+	local typed = module.get_cur_line(1, ed+1)
 	return string.match(typed, '[%w_]$')
 end
 
