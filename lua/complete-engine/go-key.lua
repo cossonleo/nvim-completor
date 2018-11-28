@@ -51,8 +51,8 @@ private.go_key_complete = function(ctx)
 		return
 	end
 
-	local typed = helper.get_cur_line(ctx.replace_col)
-	if typed == nil or string.len(typed) == 0 or string.find(typed, "%.[%w_]*$") ~= nil then
+	local typed = helper.get_line_last_word()
+	if typed == nil or string.len(typed) == 0 then
 		return
 	end
 	local all_keys = private.get_keys()

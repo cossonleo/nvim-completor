@@ -20,21 +20,47 @@ module.get_cur_ctx = function()
 	if pos.col <= 1 then
 		return nil
 	end
-	local typed = vim.api.nvim_get_current_line():sub(1, pos.col - 1)
-	local fire_pos, replace_start = lang.trigger_pos(typed)
-	if fire_pos == nil or replace_start == nil then
-		return nil
-	end
+	--local typed = vim.api.nvim_get_current_line():sub(1, pos.col - 1)
+	--local fire_pos, replace_start = lang.trigger_pos(typed)
+	--if fire_pos == nil or replace_start == nil then
+	--	return nil
+	--end
 
 	local cur_ctx = {}
 	cur_ctx.bname = helper.get_bufname()
 	cur_ctx.bno = pos.buf
 	cur_ctx.line = pos.line
-	cur_ctx.col = fire_pos -- 触发补全开始位置
-	cur_ctx.replace_col = replace_start -- 候选开始位置
-	cur_ctx.end_pos = pos.col - 1 -- 当前光标前一个位置
+	cur_ctx.col = pos.col - 1
+	--cur_ctx.col = fire_pos -- 触发补全开始位置
+	--cur_ctx.replace_col = replace_start -- 候选开始位置
+	--cur_ctx.end_pos = pos.col - 1 -- 当前光标前一个位置
 
 	return cur_ctx
+end
+
+module.is_sub_ctx = function(src_ctx, sub_ctx)
+	if src_ctx == nil or sub_ctx == nil then
+		return false
+	end
+
+	if src_ctx.bname ~= sub_ctx.bname then
+		return false
+	end
+
+	if src_ctx.bno ~= sub_ctx.bno then
+		return false
+	end
+
+	if src_ctx.line ~= sub_ctx.line then
+		return false
+	end
+
+	if src_ctx.col > sub_ctx.col then
+		return false
+	end
+	
+	local line = helper.get_cur_line(src_ctx.col, sub_ctx.col + 1)
+	return helper.is_word(line)
 end
 
 -- 上下文是否相等

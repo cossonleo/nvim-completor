@@ -62,8 +62,9 @@ end
 
 private.buffer_complete = function(ctx)
 	log.debug("buffer cm trigger")
-	local typed = helper.get_cur_line(ctx.replace_col)
-	if typed == nil or string.len(typed) == 0 or string.find(typed, "%.[%w_]*$") ~= nil then
+
+	local typed = helper.get_line_last_word()
+	if typed == nil or string.len(typed) == 0 then
 		private.refresh_words()
 		return
 	end

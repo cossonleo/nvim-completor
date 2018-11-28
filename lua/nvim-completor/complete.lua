@@ -116,14 +116,15 @@ module.text_changed = function()
 		return
 	end
 
-	if context.ctx_is_equal(ctx, private.ctx) == false then
+	if private.incomplete then
 		private.incomplete = false
 		private.ctx = ctx
-	elseif private.incomplete then
-		private.ctx.col = private.ctx.end_pos
-	else
+	elseif context.is_sub_ctx(private.ctx, ctx) then
 		cm.rematch_cdandidate(private.ctx)
 		return
+	else
+		private.incomplete = false
+		private.ctx = ctx
 	end
 
 	cm.reset()

@@ -47,6 +47,11 @@ module.get_cur_line = function(start, ed)
 	return str
 end
 
+module.get_line_last_word = function()
+	local typed = vim.api.nvim_get_current_line()
+	return string.match(typed, '[%w_]$')
+end
+
 -- row: 都是从1开始
 -- getcurpos: col 从1开始 符合lua的下标
 -- nvim_win_get_cursor: col 从0开始 
@@ -89,6 +94,26 @@ module.menu_selected = function()
 	return false
 end
 
+-- word is [%w_]
+module.is_word = function(str)
+	if str == nil then
+		return false
+	end
+	if type(str) ~= "string" then
+		return false
+	end
+
+	local len = #str
+	if len == 0 then
+		return false
+	end
+
+	local st, ed = string.find(str, '[%w_]+')
+	if st ~= 1 or ed ~= len then
+		return false
+	end
+	return true
+end
 
 -- 判断字符是不是key字符
 module.is_word_char = function(char)
