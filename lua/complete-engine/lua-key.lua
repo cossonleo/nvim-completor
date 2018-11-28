@@ -64,7 +64,7 @@ end
 
 private.init = function()
 	cm.add_engine(private.lua_key_complete, "lua")
-	log.debug("add lua key complete engine success")
+	log.info("add lua key complete engine success")
 end
 
 module.init = private.init

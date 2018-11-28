@@ -47,7 +47,7 @@ end
 
 private.init = function()
 	ncm.add_engine(private.complete, "all")
-	log.debug("add vim-lsc engine success")
+	log.info("add vim-lsc engine success")
 end
 
 module.complete_callback = private.complete_callback

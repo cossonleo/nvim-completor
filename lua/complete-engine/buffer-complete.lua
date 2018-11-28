@@ -82,4 +82,4 @@ private.buffer_complete = function(ctx)
 end
 
 ncm.add_engine(private.buffer_complete, "common")
-log.debug("add buffer complete success")
+log.info("add buffer complete success")

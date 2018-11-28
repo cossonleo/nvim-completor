@@ -10,7 +10,7 @@
 
 
 func! nvim_completor#on_insert_leave()
-	call luaeval("require('nvim-completor/complete').reset()")
+	call luaeval("require('nvim-completor/complete').leave()")
 endfunc
 
 
@@ -20,7 +20,7 @@ func! nvim_completor#on_insert_enter()
 	setlocal completeopt-=menu
 	setlocal completeopt+=noselect
 	setlocal completeopt+=noinsert
-	call luaeval("require('nvim-completor/lang-spec').set_ft()")
+	call luaeval("require('nvim-completor/complete').enter()")
 endfunc
 
 func! nvim_completor#on_text_changed()
@@ -51,30 +51,3 @@ func! nvim_completor#menu_selected()
 	return 0
 endfunc
 
-func! s:log_prefix(level)
-	let l:prefix = strftime("%Y-%m-%d %H:%M:%S ") . "[" . a:level . "] "
-	return l:prefix
-endfunc
-
-func! s:write_log(line)
-	let l:log_file = "/tmp/nvim-completor.log"
-	let l:max_file_size = 10 * 1024 * 1024
-	let l:file_flag = "a"
-	let l:file_size = getfsize(l:log_file)
-	
-	if l:file_size > l:max_file_size
-		let l:file_flag = ""
-	endif
-
-	call writefile([a:line], l:log_file, l:file_flag)
-endfunc
-
-" log level: 4
-func! nvim_completor#log_debug(line)
-	"if s:log_level < 4
-	"	return
-	"end
-
-	let l:prefix = s:log_prefix("debug")
-	call s:write_log(l:prefix . a:line)
-endfunc

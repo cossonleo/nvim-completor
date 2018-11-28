@@ -19,7 +19,7 @@ private.servers = {} -- map[buftype]servername
 
 private.call_lsp_complete = function(server_name, ctx)
 	if ctx == nil then
-		log.debug("private.call_lsp_complete ctx is nil")
+		log.error("private.call_lsp_complete ctx is nil")
 		return
 	end
 	vim.api.nvim_call_function('vim_lsp#lsp_complete', {server_name, ctx})
@@ -30,7 +30,7 @@ module.get_whitelist_servers = function()
 end
 
 module.server_initialized = function()
-	log.debug("server init start")
+	log.info("server init start")
     local server_names = vim.api.nvim_call_function('lsp#get_server_names', {})
     for sk, server_name in pairs(server_names) do
 		local info = vim.api.nvim_call_function('lsp#get_server_info', {server_name})
@@ -47,7 +47,7 @@ module.server_initialized = function()
 			end
 		end
     end
-	log.debug("server init success")
+	log.info("server init success")
 end
 
 module.server_exited = function()
@@ -93,12 +93,12 @@ end
 
 private.lsp_complete = function(ctx)
 	if ctx == nil then
-		log.debug("private.lsp_complete ctx is nil")
+		log.error("private.lsp_complete ctx is nil")
 		return false
 	end
 	local server_name = private.get_cur_server()
 	if server_name == nil then
-		log.debug("vim-lsp server_name is nil")
+		log.error("vim-lsp server_name is nil")
 		return false
 	end
 
@@ -109,7 +109,7 @@ end
 private.init = function()
 	-- 添加引擎到complete中
 	ncm.add_engine(private.lsp_complete, "all")
-	log.debug("add vim-lsp engine success")
+	log.info("add vim-lsp engine success")
 end
 
 module.init = private.init

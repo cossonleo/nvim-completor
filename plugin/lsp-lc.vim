@@ -13,7 +13,7 @@ if g:load_nvim_completor_languageclient_neovim == 0
 endif
 
 if exists("s:is_load")
-	call nvim_completor#log_debug("lsp-lc complete is load")
+	call nvim_log#log_info("lsp-lc complete is load")
 	finish
 end
 let s:is_load = 1

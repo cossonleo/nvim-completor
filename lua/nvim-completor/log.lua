@@ -14,7 +14,31 @@ module.debug = function(...)
 		return
 	end
 	local line = string.format(...)
-	vim.api.nvim_call_function('nvim_completor#log_debug', {line})
+	vim.api.nvim_call_function('nvim_log#log_debug', {line})
+end
+
+module.warn = function(...)
+	if select("#", ...) == 0 then
+		return
+	end
+	local line = string.format(...)
+	vim.api.nvim_call_function('nvim_log#log_warn', {line})
+end
+
+module.error = function(...)
+	if select("#", ...) == 0 then
+		return
+	end
+	local line = string.format(...)
+	vim.api.nvim_call_function('nvim_log#log_error', {line})
+end
+
+module.info = function(...)
+	if select("#", ...) == 0 then
+		return
+	end
+	local line = string.format(...)
+	vim.api.nvim_call_function('nvim_log#log_info', {line})
 end
 
 return module

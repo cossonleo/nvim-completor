@@ -40,7 +40,6 @@ end
 private.trigger_complete = function(is_changedp)
 	local comp_start = private.ctx.col + 1
 	local pattern = p_helper.get_cur_line(comp_start)
-	--log.debug("pattern: %s, col: %d", pattern, private.ctx.col)
 	if is_changedp and pattern ~= nil and private.last_pattern ~= nil and pattern == private.last_pattern then
 		return
 	end

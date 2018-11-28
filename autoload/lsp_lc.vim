@@ -26,8 +26,7 @@ func! lsp_lc#complete(ctx)
 endfunc
 
 func! lsp_lc#complete_callback(ctx, ret_data)
-	call nvim_completor#log_debug(string(a:ret_data))
-	"call nvim_completor#log_debug(string(len(a:ret_data.result.items)))
+	call nvim_log#log_debug(string(a:ret_data))
 	call luaeval("require('complete-engine/lsp-lc').complete_callback(_A.ctx, _A.data)", {
 				\ "ctx": a:ctx,
 				\ "data": a:ret_data,

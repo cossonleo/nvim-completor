@@ -24,7 +24,7 @@ func! vim_lsc#complete(ctx)
 endfunc
 
 func! vim_lsc#complete_callback(ctx, ret_data)
-	call nvim_completor#log_debug(string(a:ret_data))
+	call nvim_log#log_debug(string(a:ret_data))
 	call luaeval("require('complete-engine/vim-lsc').complete_callback(_A.ctx, _A.data)", {
 				\ "ctx": a:ctx,
 				\ "data": a:ret_data,

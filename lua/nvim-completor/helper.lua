@@ -51,7 +51,7 @@ end
 module.get_line_last_word = function(ed)
 	-- [1, ed]
 	local typed = module.get_cur_line(1, ed)
-	return string.match(typed, '[%w_]$')
+	return string.match(typed, '[%w_]+$')
 end
 
 -- row: 都是从1开始

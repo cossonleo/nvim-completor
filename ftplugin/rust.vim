@@ -12,7 +12,7 @@ if exists("g:load_rust_key_complete") != 0 && g:load_rust_key_complete == 0
 endif
 
 if exists("s:is_load")
-	call nvim_completor#log_debug("rust key complete is load")
+	call nvim_log#log_info("rust key complete is load")
 	finish
 end
 let s:is_load = 1

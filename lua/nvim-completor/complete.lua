@@ -102,9 +102,9 @@ end
 
 -- triggered when popmenu is not show
 module.text_changed = function()
-	log.debug("text changed")
 	if private.complete_engines == nil or #private.complete_engines == 0 then
 		log.debug("text_changed: complete engines is nil")
+		cm.reset()
 		return
 	end
 
@@ -113,6 +113,7 @@ module.text_changed = function()
 		log.debug("text_changed: ctx is nil")
 		private.ctx = nil
 		private.incomplete = false
+		cm.reset()
 		return
 	end
 
@@ -157,9 +158,14 @@ module.text_changedp = function()
 	cm.rematch_cdandidate(private.ctx)
 end
 
-module.reset = function()
+module.leave = function()
 	cm.reset()
 	private.reset()
+end
+
+module.enter = function()
+	lang.set_ft()
+	module.text_changed()
 end
 
 return module

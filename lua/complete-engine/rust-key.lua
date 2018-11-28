@@ -71,7 +71,7 @@ end
 
 private.init = function()
 	cm.add_engine(private.rust_key_complete, "rust")
-	log.debug("add rust key complete engine success")
+	log.info("add rust key complete engine success")
 end
 
 module.init = private.init

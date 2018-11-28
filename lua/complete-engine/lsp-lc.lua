@@ -54,7 +54,7 @@ end
 
 private.init = function()
 	ncm.add_engine(private.complete, "all")
-	log.debug("add lsp-lc engine success")
+	log.info("add lsp-lc engine success")
 end
 
 module.complete_callback = private.complete_callback
