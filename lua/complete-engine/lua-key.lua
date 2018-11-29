@@ -14,34 +14,27 @@ local cm = require("nvim-completor/complete")
 local helper = require("nvim-completor/helper")
 local log = require("nvim-completor/log")
 local head_match = require("nvim-completor/head-fuzzy-match")
+local cu = require("complete-engine/complete-util")
 
-private.keys = nil
-
-private.get_keys = function()
-	if private.keys ~= nil and #private.keys > 0 then
-		return private.keys
-	end
-
-	private.keys = {}
-	table.insert(private.keys, {word = "local", abbr = "local", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "nil", abbr = "nil", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "function", abbr = "function", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "end", abbr = "end", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "return", abbr = "return", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "module", abbr = "module", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "while", abbr = "while", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "not", abbr = "not", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "or", abbr = "or", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "and", abbr = "and", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "repeat", abbr = "repeat", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "util", abbr = "util", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "break", abbr = "break", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "then", abbr = "then", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "elseif", abbr = "elseif", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "true", abbr = "true", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "false", abbr = "false", menu = "key", icase = 1, dup = 0})
-	return private.keys
-end
+private.keys = {
+	"local",
+	"nil",
+	"function",
+	"end",
+	"return",
+	"module",
+	"while",
+	"not",
+	"or",
+	"and",
+	"repeat",
+	"util",
+	"break",
+	"then",
+	"elseif",
+	"true",
+	"false",
+}
 
 private.lua_key_complete = function(ctx)
 	local ft = helper.get_filetype()
@@ -53,12 +46,17 @@ private.lua_key_complete = function(ctx)
 	if typed == nil or string.len(typed) == 0 then
 		return
 	end
-	local all_keys = private.get_keys()
-	local matchs = head_match.simple_match(all_keys, typed)
+
+	local matchs = head_match.simple_match(private.keys, typed)
+	local candi = {}
 	for _, match in ipairs(matchs) do
-		match.word = string.sub(match.word, #typed + 1)
+		local mw = string.sub(match, #typed + 1)
+		local c = cu.convert_to_vim_completion(mw, match)
+		if c ~= nil then
+			table.insert(candi, c)
+		end
 	end
-	cm.add_candidate(ctx, matchs)
+	cm.add_candidate(ctx, candi)
 	return
 end
 

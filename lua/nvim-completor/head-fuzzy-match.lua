@@ -13,7 +13,7 @@ module.simple_match = function(matchs, pattern)
 	local prefix = "^" .. pattern
 	local result = {}
 	for _, match in ipairs(matchs) do
-		if string.find(match.word, prefix) ~= nil then
+		if string.find(match, prefix) ~= nil then
 			table.insert(result, match)
 		end
 	end

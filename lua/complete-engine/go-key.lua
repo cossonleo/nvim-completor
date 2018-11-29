@@ -14,36 +14,29 @@ local cm = require("nvim-completor/complete")
 local helper = require("nvim-completor/helper")
 local log = require("nvim-completor/log")
 local head_match = require("nvim-completor/head-fuzzy-match")
+local cu = require("complete-engine/complete-util")
 
-private.keys = nil
-
-private.get_keys = function()
-	if private.keys ~= nil and #private.keys > 0 then
-		return private.keys
-	end
-
-	private.keys = {}
-	table.insert(private.keys, {word = "type", abbr = "type", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "struct", abbr = "struct", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "interface", abbr = "interface", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "import", abbr = "import", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "package", abbr = "package", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "const", abbr = "const", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "return", abbr = "return", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "chan", abbr = "chan", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "continue", abbr = "continue", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "break", abbr = "break", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "select", abbr = "select", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "case", abbr = "case", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "switch", abbr = "switch", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "range", abbr = "range", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "func", abbr = "func", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "defer", abbr = "defer", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "else", abbr = "else", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "default", abbr = "else", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "iota", abbr = "iota", menu = "key", icase = 1, dup = 0})
-	return private.keys
-end
+private.keys = {
+	"type",
+	"struct",
+	"interface",
+	"import",
+	"package",
+	"const",
+	"return",
+	"chan",
+	"continue",
+	"break",
+	"select",
+	"case",
+	"switch",
+	"range",
+	"func",
+	"defer",
+	"else",
+	"default",
+	"iota"
+}
 
 private.go_key_complete = function(ctx)
 	local ft = helper.get_filetype()
@@ -55,13 +48,17 @@ private.go_key_complete = function(ctx)
 	if typed == nil or string.len(typed) == 0 then
 		return
 	end
-	local all_keys = private.get_keys()
 
-	local matchs = head_match.simple_match(all_keys, typed)
+	local matchs = head_match.simple_match(private.keys, typed)
+	local candi = {}
 	for _, match in ipairs(matchs) do
-		match.word = string.sub(match.word, #typed + 1)
+		local mw = string.sub(match, #typed + 1)
+		local c = cu.convert_to_vim_completion(mw, match)
+		if c ~= nil then
+			table.insert(candi, c)
+		end
 	end
-	cm.add_candidate(ctx, matchs)
+	cm.add_candidate(ctx, candi)
 	return
 end
 

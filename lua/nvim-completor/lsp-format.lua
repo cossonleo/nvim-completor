@@ -76,7 +76,6 @@ private.format_item = function(ctx, item)
 		start = item['textEdit']['range']['start']['character'] + 1
 	else
 		start = lang.fire_postion(ctx.col)
-		log.debug("start: %d", start)
 		if start == 0 then
 			return nil
 		end
@@ -90,7 +89,6 @@ private.format_item = function(ctx, item)
 	end
 
 	local comp_start = ctx.col + 1
-	log.debug("cs: %d", comp_start)
 	if comp_start < start then
 		return nil
 	end

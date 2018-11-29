@@ -14,41 +14,34 @@ local cm = require("nvim-completor/complete")
 local helper = require("nvim-completor/helper")
 local log = require("nvim-completor/log")
 local head_match = require("nvim-completor/head-fuzzy-match")
+local cu = require("complete-engine/complete-util")
 
-private.keys = {}
-
-private.get_keys = function()
-	if private.keys ~= nil and #private.keys > 0 then
-		return private.keys
-	end
-
-	private.keys = {}
-	table.insert(private.keys, {word = "break", abbr = "break", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "const", abbr = "const", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "continue", abbr = "continue", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "crate", abbr = "crate", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "else", abbr = "else", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "enum", abbr = "enum", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "extern", abbr = "extern", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "false", abbr = "false", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "impl", abbr = "impl", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "loop", abbr = "loop", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "match", abbr = "match", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "move", abbr = "move", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "return", abbr = "return", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "Self", abbr = "Self", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "self", abbr = "self", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "static", abbr = "static", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "struct", abbr = "struct", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "super", abbr = "super", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "trait", abbr = "trait", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "true", abbr = "true", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "type", abbr = "type", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "unsafe", abbr = "unsafe", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "where", abbr = "where", menu = "key", icase = 1, dup = 0})
-	table.insert(private.keys, {word = "while", abbr = "while", menu = "key", icase = 1, dup = 0})
-	return private.keys
-end
+private.keys = {
+	"break",
+	"const",
+	"continue",
+	"crate",
+	"else",
+	"enum",
+	"extern",
+	"false",
+	"impl",
+	"loop",
+	"match",
+	"move",
+	"return",
+	"Self",
+	"self",
+	"static",
+	"struct",
+	"super",
+	"trait",
+	"true",
+	"type",
+	"unsafe",
+	"where",
+	"while",
+}
 
 private.rust_key_complete = function(ctx)
 	local ft = helper.get_filetype()
@@ -60,12 +53,17 @@ private.rust_key_complete = function(ctx)
 	if typed == nil or string.len(typed) == 0 then
 		return
 	end
-	local all_keys = private.get_keys()
-	local matchs = head_match.simple_match(all_keys, typed)
+
+	local matchs = head_match.simple_match(private.keys, typed)
+	local candi = {}
 	for _, match in ipairs(matchs) do
-		match.word = string.sub(match.word, #typed + 1)
+		local mw = string.sub(match, #typed + 1)
+		local c = cu.convert_to_vim_completion(mw, match)
+		if c ~= nil then
+			table.insert(candi, c)
+		end
 	end
-	cm.add_candidate(ctx, matchs)
+	cm.add_candidate(ctx, candi)
 	return
 end
 

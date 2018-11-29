@@ -31,7 +31,7 @@ endfunc
 " warn 3
 " debug 4
 func! nvim_log#log_debug(line)
-	let g:ncp_log_level = get(g:, "g:ncp_log_level", 1)
+	let g:ncp_log_level = get(g:, "ncp_log_level", 1)
 	if g:ncp_log_level < 4
 		return
 	endif
@@ -41,7 +41,7 @@ func! nvim_log#log_debug(line)
 endfunc
 
 func! nvim_log#log_warn(line)
-	let g:ncp_log_level = get(g:, "g:ncp_log_level", 1)
+	let g:ncp_log_level = get(g:, "ncp_log_level", 1)
 	if g:ncp_log_level < 3
 		return
 	endif
@@ -51,7 +51,7 @@ func! nvim_log#log_warn(line)
 endfunc
 
 func! nvim_log#log_error(line)
-	let g:ncp_log_level = get(g:, "g:ncp_log_level", 1)
+	let g:ncp_log_level = get(g:, "ncp_log_level", 1)
 	if g:ncp_log_level < 2
 		return
 	endif
@@ -61,7 +61,7 @@ func! nvim_log#log_error(line)
 endfunc
 
 func! nvim_log#log_info(line)
-	let g:ncp_log_level = get(g:, "g:ncp_log_level", 1)
+	let g:ncp_log_level = get(g:, "ncp_log_level", 1)
 	if g:ncp_log_level < 1
 		return
 	endif
