@@ -44,6 +44,9 @@ module.get_cur_line = function(start, ed)
 		return ""
 	end
 	local str = string.sub(typed, st, tail)
+	if str == nil then
+		return ""
+	end
 	return str
 end
 

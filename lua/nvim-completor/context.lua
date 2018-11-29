@@ -62,8 +62,12 @@ module.is_sub_ctx = function(src_ctx, sub_ctx)
 	if src_ctx.col > sub_ctx.col then
 		return false
 	end
+
+	if src_ctx.col == sub_ctx.col then
+		return true
+	end
 	
-	local line = helper.get_cur_line(src_ctx.col, sub_ctx.col)
+	local line = helper.get_cur_line(src_ctx.col + 1, sub_ctx.col)
 	return helper.is_word(line)
 end
 

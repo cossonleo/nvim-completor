@@ -111,8 +111,7 @@ module.text_changed = function()
 	local ctx = context.get_cur_ctx()
 	if ctx == nil then -- 终止补全
 		log.debug("text_changed: ctx is nil")
-		private.ctx = nil
-		private.incomplete = false
+		private.reset()
 		cm.reset()
 		return
 	end

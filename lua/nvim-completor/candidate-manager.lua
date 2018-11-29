@@ -18,14 +18,14 @@ local fuzzy = require("nvim-completor/fuzzy-match")
 private.ctx = nil -- 当前上下文环境
 private.candidate = {} -- 当前候选
 private.candidate_cache = {} -- 模糊匹配时，缩小匹配范围
-private.last_pattern = nil
+private.last_pattern = ""
 
 -- 重置状态
 module.reset = function()
 	private.ctx = nil -- 当前上下文环境
 	private.candidate = {} -- 当前候选
 	private.candidate_cache = {} -- 模糊匹配时，缩小匹配范围
-	private.last_pattern = nil
+	private.last_pattern = ""
 end
 
 private.print_t = function(t)
@@ -40,19 +40,22 @@ end
 private.trigger_complete = function(is_changedp)
 	local comp_start = private.ctx.col + 1
 	local pattern = p_helper.get_cur_line(comp_start)
-	if is_changedp and pattern ~= nil and private.last_pattern ~= nil and pattern == private.last_pattern then
+	if is_changedp and #pattern == 0 and #private.last_pattern == 0 and pattern == private.last_pattern then
 		return
 	end
 
-	if pattern == nil or private.last_pattern == nil or p_helper.has_prefix(pattern, private.last_pattern) == nil then
+	if #pattern == 0 or #private.last_pattern == 0 or not p_helper.has_prefix(pattern, private.last_pattern)  then
 		private.candidate_cache = private.candidate
 	end
 	if #private.candidate_cache == 0 then
 		return
 	end
+	private.candidate_cache = private.candidate
 
 	if pattern ~= nil then
+		log.debug("pattern: %s, src len: %d", pattern, #private.candidate_cache)
 		private.candidate_cache = fuzzy.filter_completion_items(pattern, private.candidate_cache)
+		log.debug("pattern: %s, res len: %d", pattern, #private.candidate_cache)
 	end
 	private.last_pattern = pattern
 
