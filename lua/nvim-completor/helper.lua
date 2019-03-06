@@ -13,10 +13,44 @@ local private = {}
 
 local log = require("nvim-completor/log")
 
+---- 获取当前行内容
+---- start：开始列 如果nil，则设置为1
+---- ed：结束列 如果nil, 则设置为到光标前一个位置
+---- [start, ed]
+---- return: str
+--module.get_cur_line = function(start, ed)
+--	-- nvim_get_current_buf()
+--	-- nvim_get_current_line()
+--	-- nvim_buf_get_lines({buffer}, {start}, {end}, {strict_indexing})
+--	local st = 1
+--	local tail = 1
+--	if start ~= nil then
+--		st = start
+--	end
+--
+--	if ed == nil then
+--		local cp = module.get_curpos()
+--		tail = cp.col - 1
+--	else
+--		tail = ed
+--	end
+--
+--	if  tail < st then
+--		return ""
+--	end
+--
+--	local typed = vim.api.nvim_get_current_line()
+--	if typed == nil or #typed <= 0 or #typed < st then
+--		return ""
+--	end
+--	local str = string.sub(typed, st, tail)
+--	if str == nil then
+--		return ""
+--	end
+--	return str
+--end
+--
 -- 获取当前行内容
--- start：开始列 如果nil，则设置为1
--- ed：结束列 如果nil, 则设置为到光标前一个位置
--- [start, ed]
 -- return: str
 module.get_cur_line = function(start, ed)
 	-- nvim_get_current_buf()
