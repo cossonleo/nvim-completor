@@ -24,9 +24,6 @@ function context:eq(ctx)
 	if self.incomplete == true then
 		return false
 	end
-	if self == nil or ctx == nil then
-		return false
-	end
 
 	if self.bname ~= ctx.bname then
 		return false
@@ -56,6 +53,11 @@ function context:eq(ctx)
 
 	local typed3 = ctx.typed:sub(self.col + 1, ctx.col)
 	return helper.is_word(typed3)
+end
+
+-- 不做任何检查
+function context:typed_changes(ctx)
+	return ctx.typed:sub(self.col, ctx.col - 1)
 end
 
 function context:new()
@@ -88,9 +90,17 @@ end
 
 
 local complete_engine = {
+	src = nil,
 	ctx = nil,
-	src = {},
+	complete_items = nil,
+	matches = nil,
 }
+
+function complete_engine:reset()
+	self.ctx = nil
+	self.complete_items = nil
+	self.matches = nil
+end
 
 function complete_engine:add_src(handle, ...)
 	if handle == nil then
@@ -101,6 +111,9 @@ function complete_engine:add_src(handle, ...)
 		return
 	end
 
+	if self.src == nil then
+		self.src = {}
+	end
 	local fts = { ... }
 	if #fts == 0 then
 		if self.src["common"] == nil then
@@ -154,7 +167,7 @@ function complete_engine:add_src(handle, ...)
 	log.debug("new engine for %s is add", helper.table_to_string(fts))
 end
 
-function complete_engine:text_changed ()
+function complete_engine:text_changed()
 	if self.src == nil or #self.src == 0 then
 		log.debug("text_changed: complete engines is nil")
 		return
@@ -163,26 +176,21 @@ function complete_engine:text_changed ()
 	local ctx = context.new()
 	if ctx == nil then -- 终止补全
 		log.debug("text_changed: ctx is nil")
+		self.reset()
 		return
 	end
 
-	if self.incomplete then
-		self.incomplete = false
-		self.ctx = ctx
-	elseif context.is_sub_ctx(self.ctx, ctx) then
-		cm.rematch_cdandidate(self.ctx)
+	if self.ctx ~= nil and self.ctx:eq(ctx) then
+		self.refresh_matches(ctx)
 		return
-	else
-		self.incomplete = false
-		self.ctx = ctx
 	end
 
-	cm.reset()
-	-- 补全
-	for _, handle in ipairs(self.src) do
-		handle(self.ctx)
-	end
+	self.reset()
+	self.ctx = ctx
+	self:call_src()
+end
 
+function complete_engine:call_src()
 	local handles = nil
 	local cur_ft = lang.get_ft()
 	if cur_ft == nil then
@@ -199,4 +207,8 @@ function complete_engine:text_changed ()
 			handle(self.ctx)
 		end
 	end
+end
+
+
+function complete_engine:refresh_matches(ctx)
 end
