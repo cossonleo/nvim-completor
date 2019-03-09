@@ -137,5 +137,9 @@ module.gener_complete_start = function(col)
 	return compl_start
 end
 
+module.is_fire_complete = function(typed)
+	return true
+end
+
 return module
 

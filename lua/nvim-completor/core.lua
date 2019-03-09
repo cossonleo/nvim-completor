@@ -7,9 +7,10 @@
 --       Desc: core of complete framework
 --------------------------------------------------
 
-local helper = require("nvim-completor/helper")
+local p_helper = require("nvim-completor/helper")
 local lang = require("nvim-completor/lang-spec")
 local log = require("nvim-completor/log")
+local fuzzy = require("nvim-completor/fuzzy-match")
 
 local context = {
 	col = 0,
@@ -20,11 +21,59 @@ local context = {
 	typed = "",
 }
 
-function context:eq(ctx)
+function context:offset_typed(ctx)
+	if self == nil or ctx == nil then
+		return nil
+	end
+
+	if self.bname ~= ctx.bname then
+		return nil
+	end
+
+	if self.bno ~= ctx.bno then
+		return nil
+	end
+
+	if self.line ~= ctx.line then
+		return nil
+	end
+
+	if self.col > ctx.col then
+		return nil
+	end
+
+	if self.col == ctx.col and self.typed == ctx.typed then
+		return ""
+	end
+
+	local typed1 = self.typed:sub(1, self.col)
+	local typed2 = ctx.typed:sub(1, self.col)
+	if typed1 ~= typed2 then
+		return nil
+	end
+
+	local typed3 = ctx.typed:sub(self.col + 1, ctx.col)
+	if not p_helper.is_word(typed3) then
+		return nil
+	end
+	return typed3
+end
+
+-- self: origin, ctx: offset_ctx
+function context:is_offset_ctx(ctx)
 	if self.incomplete == true then
 		return false
 	end
 
+	local offset_typed = self:offset_typed(ctx)
+	if offset_typed == nil or #offset_typed == 0 then
+		return false
+	end
+
+	return true
+end
+
+function cotext:eq(ctx)
 	if self.bname ~= ctx.bname then
 		return false
 	end
@@ -37,28 +86,21 @@ function context:eq(ctx)
 		return false
 	end
 
-	if self.col > ctx.col then
+	if self.col ~= ctx.col then
 		return false
 	end
 
-	if self.col == ctx.col and self.typed == ctx.typed then
-		return true
-	end
-
-	local typed1 = self.typed:sub(1, self.col)
-	local typed2 = ctx.typed:sub(1, self.col)
-	if typed1 ~= typed2 then
+	if self.typed ~= ctx.typed then
 		return false
 	end
 
-	local typed3 = ctx.typed:sub(self.col + 1, ctx.col)
-	return helper.is_word(typed3)
+	return true
 end
 
 -- 不做任何检查
-function context:typed_changes(ctx)
-	return ctx.typed:sub(self.col, ctx.col - 1)
-end
+--function context:typed_changes(ctx)
+--	return ctx.typed:sub(self.col, ctx.col - 1)
+--end
 
 function context:new()
 	local typed = vim.api.nvim_get_current_line()
@@ -66,7 +108,7 @@ function context:new()
 		return nil
 	end
 
-	local pos = helper.get_curpos()
+	local pos = p_helper.get_curpos()
 	if pos.col <= 1 then
 		return nil
 	end
@@ -78,7 +120,7 @@ function context:new()
 
 	local ctx = {}
 	setmetatable(ctx, {__index = self})
-	ctx.bname = helper.get_bufname()
+	ctx.bname = p_helper.get_bufname()
 	ctx.bno = pos.buf
 	ctx.line = pos.line
 	ctx.col = pos.col
@@ -164,7 +206,7 @@ function complete_engine:add_src(handle, ...)
 		end
 	end
 
-	log.debug("new engine for %s is add", helper.table_to_string(fts))
+	log.debug("new engine for %s is add", p_helper.table_to_string(fts))
 end
 
 function complete_engine:text_changed()
@@ -173,16 +215,23 @@ function complete_engine:text_changed()
 		return
 	end
 
-	local ctx = context.new()
+	local ctx = context:new()
 	if ctx == nil then -- 终止补全
 		log.debug("text_changed: ctx is nil")
 		self.reset()
 		return
 	end
 
-	if self.ctx ~= nil and self.ctx:eq(ctx) then
-		self.refresh_matches(ctx)
-		return
+	if self.ctx ~= nil and not self.ctx.incomplete then
+		local offset_typed = self.ctx:offset_typed(ctx)
+		if offset_typed == "" then
+			return
+		end
+
+		if offset_typed ~= nil then
+			self.refresh_matches(offset_typed)
+			return
+		end
 	end
 
 	self.reset()
@@ -209,6 +258,78 @@ function complete_engine:call_src()
 	end
 end
 
+function complete_engine:add_complete_items(ctx, items)
+	if ctx == nil or items == nil or #items == 0 then
+		return
+	end
 
-function complete_engine:refresh_matches(ctx)
+	if not self.ctx:eq(ctx) then
+		return
+	end
+
+	self.ctx.incomplete = ctx.incomplete
+
+	if self.complete_items == nil then
+		self.complete_items = {}
+	end
+
+	for _, v in pairs(items) do
+		table.insert(self.complete_items, v)
+	end
+
+	self:init_matches()
+	return
+end
+
+function complete_engine:init_matches()
+	if self.complete_items == nil or #self.complete_items == 0 then
+		return
+	end
+
+	local cur_ctx = context:new()
+	if cur_ctx == nil then
+		return
+	end
+
+	local offset_type = self.ctx.offset_typed(cur_ctx)
+	if offset_type == nil then
+		return
+	end
+
+	if self.matches == nil then
+		self.matches = {}
+	end
+	self.matches.pre_offset = offset_type
+
+	local add_matches = fuzzy.filter_completion_items(offset_type, self.complete_items)
+	self.matches.items = add_matches
+	self:call_vim_complete()
+	return
+end
+
+
+function complete_engine:refresh_matches(offset)
+	local matches = self.complete_items
+	if self.matches ~= nil and self.matches.pre_offset ~= nil  and #self.matches.pre_offset > 0 then
+		if  p_helper.has_prefix(offset, self.matches.pre_offset) then
+			matches = self.matches.items
+		end
+	end
+
+	self.matches.pre_offset = offset
+	if matches == nil or #matches == 0 then
+		return
+	end
+
+	local add_matches = fuzzy.filter_completion_items(self.matches.pre_offset, self.complete_items)
+	self.matches.items = add_matches
+	self:call_vim_complete()
+end
+
+
+function complete_engine:call_vim_complete(pattern)
+	if self.matches.items == nil or #self.matches.items == 0 then
+		return
+	end
+	p_helper.complete(self.ctx.col, self.matches.items)
 end
