@@ -11,10 +11,6 @@
 local module = {}
 local private = {}
 
---local log = require("nvim-completor/log")
---local fuzzy = require("nvim-completor/fuzzy-match")
-local lang = require("nvim-completor/lang-spec")
-
 private.kind_text_mappings = {
             'text',
             'method',
@@ -61,23 +57,24 @@ private.complete_item_lsp2vim = function(ctx, item)
 
 	if item['textEdit'] ~= nil then
 		user_data.line = item['textEdit']['range']['start']['line']
+		user_data.bno = ctx.bno
 
 		local new_text = item['textEdit']['newText']
 		local typed_len = ctx.typed:len()
 		-- lsp range zero-base pos: start + 1 - 1
 		local front  = item['textEdit']['range']['start']['character']
 		if front < typed_len then
-			user_data.context = ctx.typed:sub(1, front) .. new_text
+			user_data.content = ctx.typed:sub(1, front) .. new_text
 		else
-			user_data.context = ctx.typed .. new_text
+			user_data.content = ctx.typed .. new_text
 		end
 		-- 补全后光标的位置
-		user_data.col = user_data.context:len()
+		user_data.col = user_data.content:len()
 
 		-- zero-based exclude: tail + 1 + 1 - 1
 		local tail = item['textEdit']['range']['end']['character'] + 1
 		if tail < typed_len then
-			user_data.context = user_data .. ctx.typed:sub(tail)
+			user_data.content = user_data .. ctx.typed:sub(tail)
 		end
 
 		-- ctx.col 补全触发位置即光标的位置

@@ -10,7 +10,7 @@
 
 
 func! nvim_completor#on_insert_leave()
-	call luaeval("require('nvim-completor/complete').leave()")
+	call luaeval("require('nvim-completor/core').leave()")
 endfunc
 
 
@@ -20,22 +20,37 @@ func! nvim_completor#on_insert_enter()
 	setlocal completeopt-=menu
 	setlocal completeopt+=noselect
 	setlocal completeopt+=noinsert
-	call luaeval("require('nvim-completor/complete').enter()")
+	call luaeval("require('nvim-completor/core').enter()")
 endfunc
 
 func! nvim_completor#on_text_changed()
 	if nvim_completor#menu_selected() == 1
 		return
 	endif
-	call luaeval("require('nvim-completor/complete').text_changed()")
+	call luaeval("require('nvim-completor/core').text_changed()")
 endfunc
 
 func! nvim_completor#on_text_changedp()
 	if !empty(v:completed_item)
 		return
 	endif
-	call luaeval("require('nvim-completor/complete').text_changedp()")
+	call luaeval("require('nvim-completor/core').text_changed()")
 endfunc
+
+func! nvim_completor#on_complete_done()
+	if empty(v:completed_item)
+		return
+	end
+
+    let user_data = get(v:completed_item, 'user_data', '')
+	if user_data ==# ''
+		return
+	end
+
+	call luaeval("require('nvim-completor/core').complete_done(_A.data)", {
+				\ "data": user_data,
+				\ })
+end
 
 func! nvim_completor#on_complete(startcol, matchs)
 	if mode() == "i" || mode() == "ic" || mode() == "ix"

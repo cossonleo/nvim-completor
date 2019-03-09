@@ -8,7 +8,7 @@
 --------------------------------------------------
 
 local p_helper = require("nvim-completor/helper")
-local lang = require("nvim-completor/lang-spec")
+local p_state = require("nvim-completor/state")
 local log = require("nvim-completor/log")
 local fuzzy = require("nvim-completor/fuzzy-match")
 
@@ -114,7 +114,7 @@ function context:new()
 	end
 
 	local front_typed = typed:sub(1, pos.col - 1)
-	if lang.is_fire_complete(front_typed) == false then
+	if p_state.is_fire_complete(front_typed) == false then
 		return nil
 	end
 
@@ -241,7 +241,7 @@ end
 
 function complete_engine:call_src()
 	local handles = nil
-	local cur_ft = lang.get_ft()
+	local cur_ft = p_state.get_ft()
 	if cur_ft == nil then
 		handles = self.src["common"]
 	else
@@ -327,9 +327,35 @@ function complete_engine:refresh_matches(offset)
 end
 
 
-function complete_engine:call_vim_complete(pattern)
+function complete_engine:call_vim_complete()
 	if self.matches.items == nil or #self.matches.items == 0 then
 		return
 	end
 	p_helper.complete(self.ctx.col, self.matches.items)
 end
+
+local module = {}
+
+module.text_changed = function()
+	complete_engine.text_changed()
+end
+
+module.leave = function()
+	complete_engine.reset()
+end
+
+module.enter = function()
+	p_state.set_ft()
+	module.text_changed()
+end
+
+module.complete_done = function(user_data)
+	local bno = user_data.bno
+	local line = user_data.line
+	local content = user_data.content
+	local col = user_data.col
+
+	vim.api.nvim_buf_set_lines(bno, line, line + 1, false, {content})
+end
+
+return module

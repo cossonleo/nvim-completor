@@ -1,7 +1,7 @@
 --------------------------------------------------
---    LICENSE: 
---     Author: 
---    Version: 
+--    LICENSE: MIT
+--     Author: Cosson2017
+--    Version: 0.3
 -- CreateTime: 2018-09-29 17:07:06
 -- LastUpdate: 2018-09-29 17:07:06
 --       Desc: The file fork from github.com/prabirshrestha/asyncomplete.vim
@@ -9,7 +9,7 @@
 
 local module = {}
 
-local log = require("nvim-completor/log")
+--local log = require("nvim-completor/log")
 
 module.filter_completion_items = function (prefix, matches)
     local result = {}

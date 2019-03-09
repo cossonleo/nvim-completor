@@ -93,7 +93,7 @@ end
 
 -- row: 都是从1开始
 -- getcurpos: col 从1开始 符合lua的下标
--- nvim_win_get_cursor: col 从0开始 
+-- nvim_win_get_cursor: col 从0开始
 module.get_curpos = function()
 	local pos = vim.api.nvim_call_function('getcurpos', {})
 	return {buf=pos[1], line=pos[2], col=pos[3]}

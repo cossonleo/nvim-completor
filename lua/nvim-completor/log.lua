@@ -1,10 +1,10 @@
 --------------------------------------------------
---    LICENSE: 
---     Author: 
---    Version: 
+--    LICENSE: MIT
+--     Author: Cosson2017
+--    Version: 0.3
 -- CreateTime: 2018-07-22 07:32:25
 -- LastUpdate: 2018-07-22 07:32:25
---       Desc: 
+--       Desc: log
 --------------------------------------------------
 
 local module = {}
