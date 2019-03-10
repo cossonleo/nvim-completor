@@ -12,6 +12,70 @@ local p_state = require("nvim-completor/state")
 local log = require("nvim-completor/log")
 local fuzzy = require("nvim-completor/fuzzy-match")
 
+local complete_src = {
+	public = {},
+	kindless = {},
+}
+
+function complete_src:add_src(handle, kind)
+	if kind == nil or kind == "" then
+		table.insert(self.kindless, handle)
+		return
+	end
+
+	if kind == "public" then
+		table.insert(self.public, handle)
+		return
+	end
+
+	if self[kind] == nil then
+		self[kind] = {}
+	end
+	table.insert(self[kind], handle)
+end
+
+function complete_src:has_complete_src()
+	local cur_ft = p_state.get_ft()
+	if cur_ft == nil or cur_ft == "" then
+		if #self.kindless > 0 then
+			return true
+		end
+		return false
+	end
+
+	if #self.public > 0 then
+		return true
+	end
+
+	if self[cur_ft] ~= nil and #self[cur_ft] > 0 then
+		return true
+	end
+
+	return false
+end
+
+function complete_src:call_src(ctx)
+	local cur_ft = p_state.get_ft()
+	if cur_ft == nil or cur_ft == "" then
+		for _, handle in pairs(self.kindless) do
+			handle(ctx)
+		end
+		return
+	end
+
+	for  _, handle in pairs(self.public) do
+		handle(ctx)
+	end
+
+	local handles = self[cur_ft]
+	if handles ~= nil then
+		for _, handle in pairs(handles) do
+			handle(ctx)
+		end
+	end
+
+end
+
 local context = {
 	col = 0,
 	line = 0,
@@ -73,7 +137,7 @@ function context:is_offset_ctx(ctx)
 	return true
 end
 
-function cotext:eq(ctx)
+function context:eq(ctx)
 	if self.bname ~= ctx.bname then
 		return false
 	end
@@ -132,7 +196,6 @@ end
 
 
 local complete_engine = {
-	src = nil,
 	ctx = nil,
 	complete_items = nil,
 	matches = nil,
@@ -144,7 +207,7 @@ function complete_engine:reset()
 	self.matches = nil
 end
 
-function complete_engine:add_src(handle, ...)
+function complete_engine:add_src(handle, src_kind)
 	if handle == nil then
 		return
 	end
@@ -156,8 +219,8 @@ function complete_engine:add_src(handle, ...)
 	if self.src == nil then
 		self.src = {}
 	end
-	local fts = { ... }
-	if #fts == 0 then
+
+	if src_kind == nil or #src_kind == 0 then
 		if self.src["common"] == nil then
 			self.src["common"] = {}
 		end
@@ -166,59 +229,67 @@ function complete_engine:add_src(handle, ...)
 		return
 	end
 
-	if fts[1] == "all" then
-		-- 去重
-		for i, v in pairs(self.src) do
-			if type(i) == "number" then
-				if handle == v then
-					return
-				end
-			else
-				local handles = self.src[i]
-				if handles ~= nil and #handles > 0 then
-					for j, h in pairs(handles) do
-						if h == handle then
-							-- 去重
-							table.remove(handles, j)
-						end
-					end
-				end
-			end
-		end
-		table.insert(self.src, handle)
-		log.debug("new engine for all is add")
-		return
+	if self.src[src_kind] == nil then
+		self.src[src_kind] = {}
 	end
 
-	for _, v in pairs(fts) do
-		if type(v) == "string" then
-			if self.src[v] == nil then
-				self.src[v] = {}
-			end
-			if #self.src[v] > 0 then
-				for j, h in pairs(self.src[v]) do
-					if h == handle then
-						table.remove(self.src, j)
-					end
-				end
-			end
-			table.insert(self.src[v], handle)
-		end
-	end
+	table.insert(self.src[src_kind], handle)
 
-	log.debug("new engine for %s is add", p_helper.table_to_string(fts))
+	--log.debug("new engine for %s is add", p_helper.table_to_string(fts))
+
+	--if fts[1] == "all" then
+	--	-- 去重
+	--	for i, v in pairs(self.src) do
+	--		if type(i) == "number" then
+	--			if handle == v then
+	--				return
+	--			end
+	--		else
+	--			local handles = self.src[i]
+	--			if handles ~= nil and #handles > 0 then
+	--				for j, h in pairs(handles) do
+	--					if h == handle then
+	--						-- 去重
+	--						table.remove(handles, j)
+	--					end
+	--				end
+	--			end
+	--		end
+	--	end
+	--	table.insert(self.src, handle)
+	--	log.debug("new engine for all is add")
+	--	return
+	--end
+
+	--for _, v in pairs(fts) do
+	--	if type(v) == "string" then
+	--		if self.src[v] == nil then
+	--			self.src[v] = {}
+	--		end
+	--		if #self.src[v] > 0 then
+	--			for j, h in pairs(self.src[v]) do
+	--				if h == handle then
+	--					table.remove(self.src, j)
+	--				end
+	--			end
+	--		end
+	--		table.insert(self.src[v], handle)
+	--	end
+	--end
+
+	-- log.debug("new engine for %s is add", p_helper.table_to_string(fts))
 end
 
 function complete_engine:text_changed()
-	if self.src == nil or #self.src == 0 then
-		log.debug("text_changed: complete engines is nil")
+	if not complete_src:has_complete_src() then
+		log.debug("text_changed: no complete src")
 		return
 	end
 
 	local ctx = context:new()
 	if ctx == nil then -- 终止补全
 		log.debug("text_changed: ctx is nil")
-		self.reset()
+		self:reset()
 		return
 	end
 
@@ -229,33 +300,14 @@ function complete_engine:text_changed()
 		end
 
 		if offset_typed ~= nil then
-			self.refresh_matches(offset_typed)
+			self:refresh_matches(offset_typed)
 			return
 		end
 	end
 
-	self.reset()
+	self:reset()
 	self.ctx = ctx
-	self:call_src()
-end
-
-function complete_engine:call_src()
-	local handles = nil
-	local cur_ft = p_state.get_ft()
-	if cur_ft == nil then
-		handles = self.src["common"]
-	else
-		handles = self.src[cur_ft]
-		if handles == nil or #handles == 0 then
-			handles = self.src["common"]
-		end
-	end
-
-	if handles ~= nil and #handles > 0 then
-		for _, handle in pairs(handles) do
-			handle(self.ctx)
-		end
-	end
+	complete_src:call_src(ctx)
 end
 
 function complete_engine:add_complete_items(ctx, items)
@@ -291,7 +343,7 @@ function complete_engine:init_matches()
 		return
 	end
 
-	local offset_type = self.ctx.offset_typed(cur_ctx)
+	local offset_type = self.ctx:offset_typed(cur_ctx)
 	if offset_type == nil then
 		return
 	end
@@ -331,17 +383,18 @@ function complete_engine:call_vim_complete()
 	if self.matches.items == nil or #self.matches.items == 0 then
 		return
 	end
+	log.debug(self.matches.items)
 	p_helper.complete(self.ctx.col, self.matches.items)
 end
 
 local module = {}
 
 module.text_changed = function()
-	complete_engine.text_changed()
+	complete_engine:text_changed()
 end
 
 module.leave = function()
-	complete_engine.reset()
+	complete_engine:reset()
 end
 
 module.enter = function()
@@ -349,13 +402,28 @@ module.enter = function()
 	module.text_changed()
 end
 
-module.complete_done = function(user_data)
+module.complete_done = function(ud)
+	local user_data = p_helper.json_decode(ud)
+	if user_data == nil then
+		return
+	end
+	if user_data.line == nil then
+		return
+	end
 	local bno = user_data.bno
 	local line = user_data.line
 	local content = user_data.content
 	local col = user_data.col
 
 	vim.api.nvim_buf_set_lines(bno, line, line + 1, false, {content})
+end
+
+module.add_complete_items = function(ctx, items)
+	complete_engine:add_complete_items(ctx, items)
+end
+
+module.add_engine = function(handle, src_kind)
+	complete_src:add_src(handle, src_kind)
 end
 
 return module

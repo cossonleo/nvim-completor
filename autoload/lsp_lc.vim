@@ -16,10 +16,11 @@ func! lsp_lc#complete(ctx)
     let l:params = {
                 \ 'filename': LSP#filename(),
                 \ 'line': LSP#line(),
-                \ 'character': a:ctx.col,
+                \ 'character': a:ctx.col - 2,
                 \ 'handle': v:true,
                 \ }
 
+	"call nvim_log#log_debug(string(a:ctx))
     "call extend(l:params, a:0 >= 1 ? a:1 : {})
     let l:Callback = function('lsp_lc#complete_callback', [a:ctx])
     return LanguageClient#Call('textDocument/completion', l:params, l:Callback)

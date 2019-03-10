@@ -10,10 +10,10 @@
 local module = {}
 local private = {}
 
-local ncm = require("nvim-completor/complete")
+local ncm = require("nvim-completor/core")
 --local helper = require("nvim-completor/helper")
 local log = require("nvim-completor/log")
-local lsp = require("nvim-completor/lsp-format")
+local lsp = require("nvim-completor/lsp")
 
 private.call_lsp_complete = function(ctx)
 	if ctx == nil then
@@ -44,16 +44,20 @@ private.complete_callback = function(ctx, data)
 	if #data_items == 0 then
 		return
 	end
-	local complete_items = lsp.parse_completion_resp(ctx, data_items)
+	local complete_items = lsp.complete_items_lsp2vim(ctx, data_items)
 	if complete_items == nil then
 		return
 	end
 
-	ncm.add_candidate(ctx, complete_items, incomplete)
+	if incomplete == true then
+		ctx.incomplete = true
+	end
+
+	ncm.add_complete_items(ctx, complete_items)
 end
 
 private.init = function()
-	ncm.add_engine(private.complete, "all")
+	ncm.add_engine(private.complete, "public")
 	log.info("add lsp-lc engine success")
 end
 

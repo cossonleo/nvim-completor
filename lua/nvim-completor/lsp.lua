@@ -7,6 +7,7 @@
 --       Desc: lsp parse
 --------------------------------------------------
 
+local p_helper = require("nvim-completor/helper")
 
 local module = {}
 local private = {}
@@ -79,7 +80,7 @@ private.complete_item_lsp2vim = function(ctx, item)
 
 		-- ctx.col 补全触发位置即光标的位置
 		if front < ctx.col then
-			word = new_text:sub(ctx.col - front + 1)
+			word = new_text:sub(ctx.col - front)
 		end
     end
 
@@ -91,7 +92,8 @@ private.complete_item_lsp2vim = function(ctx, item)
 		menu = private.get_kind_text(item.kind)
 	end
 
-    return {word = word, abbr = abbr, menu = menu, icase = 1, dup = 0, user_data = user_data}
+	local ud = p_helper.json_encode(user_data)
+    return {word = word, abbr = abbr, menu = menu, icase = 1, dup = 0, user_data = ud}
 end
 
 

@@ -133,6 +133,24 @@ module.menu_selected = function()
 	return false
 end
 
+module.json_encode = function(data)
+	if data == nil then
+		return ""
+	end
+	return vim.api.nvim_call_function('json_encode', {data})
+end
+
+module.json_decode = function(str)
+	if str == nil then
+		return nil
+	end
+	if str == "" then
+		return {}
+	end
+
+	return vim.api.nvim_call_function('json_decode', {data})
+end
+
 -- word is [%w_]
 module.is_word = function(str)
 	if str == nil then

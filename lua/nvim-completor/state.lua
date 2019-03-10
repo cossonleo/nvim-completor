@@ -30,10 +30,12 @@ private.lang_trigger_pattern = {
 private.is_fire_complete = function(typed)
 	if private.ft ~= nil and private.ft ~= "" then
 		local trigger_patterns = private.lang_trigger_pattern[private.ft]
-		for _, sub in ipairs(trigger_patterns) do
-			local start = string.find(typed, sub.."$")
-			if start ~= nil then
-				return true
+		if trigger_patterns ~= nil then
+			for _, sub in ipairs(trigger_patterns) do
+				local start = string.find(typed, sub.."$")
+				if start ~= nil then
+					return true
+				end
 			end
 		end
 	end

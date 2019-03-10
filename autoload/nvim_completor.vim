@@ -50,7 +50,8 @@ func! nvim_completor#on_complete_done()
 	call luaeval("require('nvim-completor/core').complete_done(_A.data)", {
 				\ "data": user_data,
 				\ })
-end
+endfunc
+
 
 func! nvim_completor#on_complete(startcol, matchs)
 	if mode() == "i" || mode() == "ic" || mode() == "ix"
