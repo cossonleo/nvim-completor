@@ -311,7 +311,7 @@ function complete_engine:text_changed()
 end
 
 function complete_engine:add_complete_items(ctx, items)
-	if ctx == nil or items == nil or #items == 0 then
+	if self.ctx == nil or ctx == nil or items == nil or #items == 0 then
 		return
 	end
 
@@ -410,6 +410,7 @@ module.complete_done = function(ud)
 	if user_data.line == nil then
 		return
 	end
+	log.debug(user_data)
 	local bno = user_data.bno
 	local line = user_data.line
 	local content = user_data.content

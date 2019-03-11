@@ -148,7 +148,7 @@ module.json_decode = function(str)
 		return {}
 	end
 
-	return vim.api.nvim_call_function('json_decode', {data})
+	return vim.api.nvim_call_function('json_decode', {str})
 end
 
 -- word is [%w_]

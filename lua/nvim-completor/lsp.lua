@@ -75,7 +75,7 @@ private.complete_item_lsp2vim = function(ctx, item)
 		-- zero-based exclude: tail + 1 + 1 - 1
 		local tail = item['textEdit']['range']['end']['character'] + 1
 		if tail < typed_len then
-			user_data.content = user_data .. ctx.typed:sub(tail)
+			user_data.content = user_data.content .. ctx.typed:sub(tail)
 		end
 
 		-- ctx.col 补全触发位置即光标的位置
