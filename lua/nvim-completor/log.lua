@@ -17,7 +17,7 @@ module.to_string = function(...)
 	local params = { ... }
 	local str = ""
 	for _, param in pairs(params) do
-		str = str .. vim.api.nvim_call_function("string", {param})
+		str = str .. vim.api.nvim_call_function("string", {param}) .. " "
 	end
 	return str
 end

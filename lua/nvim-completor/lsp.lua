@@ -78,9 +78,9 @@ private.complete_item_lsp2vim = function(ctx, item)
 			user_data.content = user_data.content .. ctx.typed:sub(tail)
 		end
 
-		-- ctx.col 补全触发位置即光标的位置
+		-- ctx.col 补全触发最后一个字符的位置
 		if front < ctx.col then
-			word = new_text:sub(ctx.col - front)
+			word = new_text:sub(ctx.col - front + 1)
 		end
     end
 
@@ -96,7 +96,6 @@ private.complete_item_lsp2vim = function(ctx, item)
     return {word = word, abbr = abbr, menu = menu, icase = 1, dup = 0, user_data = ud}
 end
 
-
 module.complete_items_lsp2vim = function(ctx, data)
 	local items = {}
 	for _, v in pairs(data) do
@@ -107,6 +106,23 @@ module.complete_items_lsp2vim = function(ctx, data)
 	end
 
 	return items
+end
+
+module.apply_complete_user_data = function(data)
+	local user_data = p_helper.json_decode(ud)
+	if user_data == nil then
+		return
+	end
+	if user_data.line == nil then
+		return
+	end
+	log.debug(user_data)
+	local bno = user_data.bno
+	local line = user_data.line
+	local content = user_data.content
+	local col = user_data.col
+
+	vim.api.nvim_buf_set_lines(bno, line, line + 1, false, {content})
 end
 
 return module
