@@ -221,4 +221,16 @@ module.table_to_string = function(t)
 	str = str .. "}"
 	return str
 end
+
+module.remove_tail_same = function(src, dist)
+	if src == nil then
+		return dist
+	end
+
+	if dist == nil or #dist == 0 then
+		return ""
+	end
+
+
+end
 return module

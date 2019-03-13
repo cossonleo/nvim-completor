@@ -22,7 +22,7 @@ private.lang_trigger_pattern = {
 	rust = {"%.", "::"},
 	lua = {"%.", ":"},
 	go = {"%."},
-	javascript = {"%.", "%$"},
+	javascript = {"%."},
 	php = {"%.", "->"},
 	html = {"<"},
 }
