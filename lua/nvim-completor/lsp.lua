@@ -82,6 +82,12 @@ private.complete_item_lsp2vim = function(ctx, item)
 		if front < ctx.col then
 			word = new_text:sub(ctx.col - front + 1)
 		end
+	else
+		local typed = ctx.typed:sub(1, ctx.col)
+		local start, tail = typed:find("[%w_]+$")
+		if start ~= nil and tail ~= nil then
+			word = word:sub(tail - start + 2) -- tail - start + 1 + 1
+		end
     end
 
 	if item['detail'] ~= nil then
