@@ -8,7 +8,7 @@
 --------------------------------------------------
 
 local p_helper = require("nvim-completor/helper")
-local p_state = require("nvim-completor/state")
+local p_state = require("nvim-completor/semantics")
 local log = require("nvim-completor/log")
 local fuzzy = require("nvim-completor/fuzzy-match")
 
@@ -110,14 +110,17 @@ function context:offset_typed(ctx)
 	local typed1 = self.typed:sub(1, self.col)
 	local typed2 = ctx.typed:sub(1, self.col)
 	if typed1 ~= typed2 then
+		log.debug("t1 ~= t2", "t1:", typed1, "t2:", typed2)
 		return nil
 	end
 	if self.col == ctx.col then
+		log.debug("self.col == ctx.col", "self.col:", self.col, "ctx.col:", ctx.col)
 		return ""
 	end
 
 	local typed3 = ctx.typed:sub(self.col + 1, ctx.col)
 	if not p_helper.is_word(typed3) then
+		log.debug("t3 is not word", "t3", typed3)
 		return nil
 	end
 	return typed3
@@ -162,11 +165,11 @@ function context:eq(ctx)
 end
 
 function context:new()
-	local typed = vim.api.nvim_get_current_line()
+	--local typed = vim.api.nvim_get_current_line()
+	local typed = vim.api.nvim_eval("getline('.')")
 	if typed == nil or string.len(typed) == 0 then
 		return nil
 	end
-
 	local pos = p_helper.get_curpos()
 	if pos.col < 2 then
 		return nil

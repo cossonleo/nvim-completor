@@ -8,6 +8,8 @@
 --------------------------------------------------
 
 local p_helper = require("nvim-completor/helper")
+local semantics = require("nvim-completor/semantics")
+local log = require("nvim-completor/log")
 
 local module = {}
 local private = {}
@@ -49,46 +51,73 @@ private.complete_item_lsp2vim = function(ctx, item)
 	local word = item['label']
     local abbr = item['label']
     local menu = ""
-	local user_data = {}
 
 
 	if item['insertText'] ~= nil and item['insertText'] ~= "" then
         word = item['insertText'] -- 带有snippet
 	end
 
+	local user_data = {}
+	user_data.bno = ctx.bno
+
+	local typed_len = ctx.typed:len()
+	local start = 0
+	local tail = 0
+	local new_text = word
 	if item['textEdit'] ~= nil then
+		log.debug("textEdit")
+		start = item['textEdit']['range']['start']['character'] + 1
+		tail = item['textEdit']['range']['end']['character'] + 1
+		new_text = item['textEdit']['newText']
 		user_data.line = item['textEdit']['range']['start']['line']
-		user_data.bno = ctx.bno
-
-		local new_text = item['textEdit']['newText']
-		local typed_len = ctx.typed:len()
-		-- lsp range zero-base pos: start + 1 - 1
-		local front  = item['textEdit']['range']['start']['character']
-		if front < typed_len then
-			user_data.content = ctx.typed:sub(1, front) .. new_text
-		else
-			user_data.content = ctx.typed .. new_text
-		end
-		-- 补全后光标的位置
-		user_data.col = user_data.content:len()
-
-		-- zero-based exclude: tail + 1 + 1 - 1
-		local tail = item['textEdit']['range']['end']['character'] + 1
-		if tail < typed_len then
-			user_data.content = user_data.content .. ctx.typed:sub(tail)
-		end
-
-		-- ctx.col 补全触发最后一个字符的位置
-		if front < ctx.col then
-			word = new_text:sub(ctx.col - front + 1)
-		end
 	else
-		local typed = ctx.typed:sub(1, ctx.col)
-		local start, tail = typed:find("[%w_]+$")
-		if start ~= nil and tail ~= nil then
-			word = word:sub(tail - start + 2) -- tail - start + 1 + 1
+		log.debug("not textEdit")
+		user_data.line = ctx.line - 1
+		start, tail = semantics.new_text_pos(ctx)
+		if start == nil or tail == nil then
+			start = ctx.col + 1
+			tail = ctx.col + 1
 		end
-    end
+	end
+
+	user_data.content = ctx.typed:sub(1, start - 1) .. new_text .. ctx.typed:sub(tail)
+	user_data.col = start + #new_text
+	if start <= ctx.col then
+		word = new_text:sub(ctx.col - start + 2)
+	end
+--	if item['textEdit'] ~= nil then
+--		user_data.line = item['textEdit']['range']['start']['line']
+--		user_data.bno = ctx.bno
+--
+--		local new_text = item['textEdit']['newText']
+--		local typed_len = ctx.typed:len()
+--		-- lsp range zero-base pos: start + 1 - 1
+--		local front  = item['textEdit']['range']['start']['character']
+--		if front < typed_len then
+--			user_data.content = ctx.typed:sub(1, front) .. new_text
+--		else
+--			user_data.content = ctx.typed .. new_text
+--		end
+--		-- 补全后光标的位置
+--		user_data.col = user_data.content:len()
+--
+--		-- zero-based exclude: tail + 1 + 1 - 1
+--		local tail = item['textEdit']['range']['end']['character'] + 1
+--		if tail < typed_len then
+--			user_data.content = user_data.content .. ctx.typed:sub(tail)
+--		end
+--
+--		-- ctx.col 补全触发最后一个字符的位置
+--		if front < ctx.col then
+--			word = new_text:sub(ctx.col - front + 1)
+--		end
+--	else
+--		local typed = ctx.typed:sub(1, ctx.col)
+--		local start, tail = typed:find("[%w_]+$")
+--		if start ~= nil and tail ~= nil then
+--			word = word:sub(tail - start + 2) -- tail - start + 1 + 1
+--		end
+--    end
 
 	if item['detail'] ~= nil then
 		abbr = abbr .. ' ' .. item['detail']

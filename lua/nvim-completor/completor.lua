@@ -9,8 +9,7 @@
 
 local core = require("nvim-completor/core")
 local lsp = require("nvim-completor/lsp")
-local state = require("nvim-completor/state")
-
+local state = require("nvim-completor/semantics")
 
 local module = {}
 
