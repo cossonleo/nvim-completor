@@ -59,7 +59,7 @@ end
 
 private.new_text_pos = function(ctx)
 	if ctx == nil then
-		log.error("new text pos ctx is nil")
+		log.warn("new text pos ctx is nil")
 		return nil
 	end
 
@@ -96,6 +96,7 @@ end
 
 module.is_fire_complete = private.is_fire_complete
 module.last_word_pos = private.last_word_pos
+module.new_text_pos = private.new_text_pos
 
 return module
 

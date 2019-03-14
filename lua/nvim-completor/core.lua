@@ -209,13 +209,11 @@ end
 
 function complete_engine:text_changed()
 	if not complete_src:has_complete_src() then
-		log.debug("text_changed: no complete src")
 		return
 	end
 
 	local ctx = context:new()
 	if ctx == nil then -- 终止补全
-		log.debug("text_changed: ctx is nil")
 		self:reset()
 		return
 	end
@@ -223,17 +221,13 @@ function complete_engine:text_changed()
 	if self.ctx ~= nil and not self.ctx.incomplete then
 		local offset_typed = self.ctx:offset_typed(ctx)
 		if offset_typed == "" then
-			log.info("not changed")
 			return
 		end
 
 		if offset_typed ~= nil then
-			log.info("refresh")
 			self:refresh_matches(offset_typed)
 			return
 		end
-
-		log.info("offset is nil")
 	end
 
 	self:reset()

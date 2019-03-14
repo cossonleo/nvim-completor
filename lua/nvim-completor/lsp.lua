@@ -52,7 +52,6 @@ private.complete_item_lsp2vim = function(ctx, item)
     local abbr = item['label']
     local menu = ""
 
-
 	if item['insertText'] ~= nil and item['insertText'] ~= "" then
         word = item['insertText'] -- 带有snippet
 	end
@@ -63,15 +62,13 @@ private.complete_item_lsp2vim = function(ctx, item)
 	local typed_len = ctx.typed:len()
 	local start = 0
 	local tail = 0
-	local new_text = word
 	if item['textEdit'] ~= nil then
-		log.debug("textEdit")
 		start = item['textEdit']['range']['start']['character'] + 1
 		tail = item['textEdit']['range']['end']['character'] + 1
-		new_text = item['textEdit']['newText']
+		word = item['textEdit']['newText']
 		user_data.line = item['textEdit']['range']['start']['line']
 	else
-		log.debug("not textEdit")
+		--word = abbr
 		user_data.line = ctx.line - 1
 		start, tail = semantics.new_text_pos(ctx)
 		if start == nil or tail == nil then
@@ -80,10 +77,10 @@ private.complete_item_lsp2vim = function(ctx, item)
 		end
 	end
 
-	user_data.content = ctx.typed:sub(1, start - 1) .. new_text .. ctx.typed:sub(tail)
-	user_data.col = start + #new_text
+	user_data.content = ctx.typed:sub(1, start - 1) .. word .. ctx.typed:sub(tail)
+	user_data.col = start + #word
 	if start <= ctx.col then
-		word = new_text:sub(ctx.col - start + 2)
+		word = word:sub(ctx.col - start + 2)
 	end
 --	if item['textEdit'] ~= nil then
 --		user_data.line = item['textEdit']['range']['start']['line']
@@ -144,14 +141,13 @@ module.complete_items_lsp2vim = function(ctx, data)
 end
 
 module.apply_complete_user_data = function(data)
-	local user_data = p_helper.json_decode(ud)
+	local user_data = p_helper.json_decode(data)
 	if user_data == nil then
 		return
 	end
 	if user_data.line == nil then
 		return
 	end
-	log.debug(user_data)
 	local bno = user_data.bno
 	local line = user_data.line
 	local content = user_data.content

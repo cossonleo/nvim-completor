@@ -10,6 +10,7 @@
 local core = require("nvim-completor/core")
 local lsp = require("nvim-completor/lsp")
 local state = require("nvim-completor/semantics")
+local log = require("nvim-completor/log")
 
 local module = {}
 
@@ -27,6 +28,7 @@ module.text_changed = function()
 end
 
 module.complete_done = function(user_data)
+	log.debug("complete done", user_data)
 	lsp.apply_complete_user_data(user_data)
 end
 
