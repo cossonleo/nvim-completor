@@ -68,12 +68,12 @@ private.new_text_pos = function(ctx)
 	if fstart == nil then
 		fstart = #front_str + 1
 		fend = #front_str + 1
+	else
+		fend = fend + 1
 	end
 
 	local end_str = ctx.typed:sub(ctx.col + 1)
-	if #end_str == 0 then
-		fend = #front_str + 1
-	else
+	if #end_str > 0  then
 		local _, tt = end_str:find("^[%w_]+")
 		if tt ~= nil then
 			fend = #front_str + tt + 1
