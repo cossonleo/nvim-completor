@@ -11,8 +11,6 @@
 local module = {}
 local private = {}
 
-local helper = require("nvim-completor/helper")
-
 private.ft = nil
 private.trigger_len = 2
 

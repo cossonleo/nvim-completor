@@ -11,14 +11,12 @@ if exists('g:nvim_completor_load')
 endif
 let g:nvim_completor_load = 1
 
-lua	require('nvim-completor/event_handle').on_load()
+lua ncp = require('nvim-completor')
+lua ncp.on_load()
 
-autocmd TextChangedP * lua require('nvim-completor/event_handle').on_text_changed_p()
-autocmd TextChangedI * lua require('nvim-completor/event_handle').on_text_changed_i()
-autocmd InsertEnter * lua require('nvim-completor/event_handle').on_insert()
-autocmd InsertLeave * lua require('nvim-completor/event_handle').on_leave()
-autocmd CompleteDone * lua require('nvim-completor/event_handle').on_complete_done()
-autocmd BufEnter * lua require('nvim-completor/event_handle').on_buf_enter()
-
-"BufAdd
-"
+autocmd TextChangedP * lua ncp.on_text_changed_p()
+autocmd TextChangedI * lua ncp.on_text_changed_i()
+autocmd InsertEnter * lua ncp.on_insert()
+autocmd InsertLeave * lua ncp.on_leave()
+autocmd CompleteDone * lua ncp.on_complete_done()
+autocmd BufEnter * lua ncp.on_buf_enter()

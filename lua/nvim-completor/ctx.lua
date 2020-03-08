@@ -9,7 +9,9 @@
 
 local api = vim.api
 
+-- position_param = {}
 local context = {
+	position_param = {},
 	col = 0,
 	line = 0,
 	bname = "",
@@ -99,6 +101,9 @@ function context:new()
 	if not (typed and #typed == 0) then
 		return nil
 	end
+
+	local position = vim.lsp.util.make_position_params()
+
 	local pos = p_helper.get_curpos()
 	if pos.col < 2 then
 		return nil
