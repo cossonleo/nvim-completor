@@ -9,7 +9,6 @@
 
 local p_helper = require("nvim-completor/helper")
 local p_state = require("nvim-completor/semantics")
-local log = require("nvim-completor/log")
 local fuzzy = require("nvim-completor/fuzzy-match")
 
 local complete_src = {
@@ -55,7 +54,6 @@ function complete_src:has_complete_src()
 end
 
 function complete_src:call_src(ctx)
-	log.info("complete ctx", ctx)
 	local cur_ft = p_state.get_ft()
 	if cur_ft == nil or cur_ft == "" then
 		for _, handle in pairs(self.kindless) do
@@ -87,7 +85,7 @@ local context = {
 }
 
 function context:offset_typed(ctx)
-	if self == nil or ctx == nil then
+	if not (self and ctx) then
 		return nil
 	end
 
@@ -110,17 +108,14 @@ function context:offset_typed(ctx)
 	local typed1 = self.typed:sub(1, self.col)
 	local typed2 = ctx.typed:sub(1, self.col)
 	if typed1 ~= typed2 then
-		log.debug("t1 ~= t2", "t1:", typed1, "t2:", typed2)
 		return nil
 	end
 	if self.col == ctx.col then
-		log.debug("self.col == ctx.col", "self.col:", self.col, "ctx.col:", ctx.col)
 		return ""
 	end
 
 	local typed3 = ctx.typed:sub(self.col + 1, ctx.col)
 	if not p_helper.is_word(typed3) then
-		log.debug("t3 is not word", "t3", typed3)
 		return nil
 	end
 	return typed3
@@ -236,9 +231,10 @@ function complete_engine:text_changed()
 end
 
 function complete_engine:add_complete_items(ctx, items)
-	if self.ctx == nil or ctx == nil or items == nil or #items == 0 then
+	if not (self.ctx and ctx and items and #items == 0) then
 		return
 	end
+	
 
 	if not self.ctx:eq(ctx) then
 		return
@@ -311,7 +307,6 @@ function complete_engine:call_vim_complete()
 	if self.matches.items == nil or #self.matches.items == 0 then
 		return
 	end
-	log.debug(self.matches.items)
 	p_helper.complete(self.ctx.col + 1, self.matches.items)
 end
 

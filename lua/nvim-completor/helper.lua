@@ -11,8 +11,6 @@
 local module = {}
 local private = {}
 
-local log = require("nvim-completor/log")
-
 ---- 获取当前行内容
 ---- start：开始列 如果nil，则设置为1
 ---- ed：结束列 如果nil, 则设置为到光标前一个位置
@@ -97,12 +95,6 @@ end
 module.get_curpos = function()
 	local pos = vim.api.nvim_call_function('getcurpos', {})
 	return {buf=pos[1], line=pos[2], col=pos[3]}
-end
-
--- 获取buf的文件类型
-module.get_filetype = function()
-	local pos = module.get_curpos()
-	return vim.api.nvim_buf_get_option(pos['buf'], 'filetype')
 end
 
 -- 获取buf的全路径文件名
@@ -198,28 +190,6 @@ module.has_prefix = function(str, pre)
 		end
 	end
 	return true
-end
-
-module.table_to_string = function(t)
-	if t == nil then
-		return ""
-	end
-	if type(t) ~= "table" then
-		return ""
-	end
-	if #t == 0 then
-		return "{}"
-	end
-
-	local str = "{ "
-	for i, v in pairs(t) do
-		str = str .. "[" .. i .. "]" .. "=" .. v .. ","
-	end
-
-	local len = string.len(str)
-	str = string.sub(str, 1, len - 1)
-	str = str .. "}"
-	return str
 end
 
 module.remove_tail_same = function(src, dist)

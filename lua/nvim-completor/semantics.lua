@@ -12,7 +12,6 @@ local module = {}
 local private = {}
 
 local helper = require("nvim-completor/helper")
-local log = require("nvim-completor/log")
 
 private.ft = nil
 private.trigger_len = 2
@@ -59,7 +58,6 @@ end
 
 private.new_text_pos = function(ctx)
 	if ctx == nil then
-		log.warn("new text pos ctx is nil")
 		return nil
 	end
 
@@ -82,8 +80,8 @@ private.new_text_pos = function(ctx)
 	return fstart, fend
 end
 
-module.set_ft = function()
-	private.ft = helper.get_filetype()
+module.set_ft = function(ft)
+	private.ft = ft
 end
 
 module.get_ft = function()
