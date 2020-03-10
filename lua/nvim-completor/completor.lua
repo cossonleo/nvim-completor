@@ -9,7 +9,7 @@
 
 local complete_src = require("nvim-completor/src_manager")
 local lsp = require("nvim-completor/lsp")
-local context = require("nvim-completor/contxt")
+local context = require("nvim-completor/context")
 
 local module = {}
 
@@ -44,7 +44,7 @@ function complete_engine:text_changed(ctx)
 	end
 
 	if not offset then
-		self::reset()
+		self:reset()
 		self.ctx = ctx
 	end
 	complete_src:call_src(ctx)
@@ -79,7 +79,7 @@ function complete_engine:add_complete_items(ctx, items, incomplete)
 end
 
 function complete_engine:refresh_complete(ctx)
-	local cur_ctx = ctx or context::new()
+	local cur_ctx = ctx or context:new()
 	local offset = ctx.offset_typed(self.ctx)
 	local matches = {}
 	if vim.deep_equal(ctx, self.ctx) then
@@ -87,7 +87,7 @@ function complete_engine:refresh_complete(ctx)
 	elseif offset then
 		matches = fuzzy.filter_completion_items(offset, self.complete_items)
 	else
-		self::reset()
+		self:reset()
 	end
 	vim.fn.complete(self.ctx.pos.position.character+1, matches)
 end
