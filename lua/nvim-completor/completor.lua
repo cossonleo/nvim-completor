@@ -9,19 +9,20 @@
 
 local complete_src = require("nvim-completor/src_manager")
 local lsp = require("nvim-completor/lsp")
+local context = require("nvim-completor/contxt")
 
 local module = {}
 
 local complete_engine = {
 	ctx = nil,
 	complete_items = nil,
-	matches = nil,
+	incomplete = nil,
 }
 
 function complete_engine:reset()
 	self.ctx = nil
 	self.complete_items = nil
-	self.matches = nil
+	self.incomplete = nil
 end
 
 function complete_engine:text_changed(ctx)
@@ -37,39 +38,33 @@ function complete_engine:text_changed(ctx)
 	end
 
 	local offset = ctx.is_offset_ctx(self.ctx)
-	-- 请求补全
-	if not self.ctx or not offset then
-		self:reset()
+	if offset and not self.incomplete then
+		complete_engine:refresh_complete(ctx)
+		return
+	end
+
+	if not offset then
+		self::reset()
 		self.ctx = ctx
-		complete_src:call_src(ctx)
-		return
 	end
-
-	-- 刷新补全
-	if not self.ctx.incomplete then
-		complete_engine:refresh_matches(offset)
-		return
-	end
-
-	-- 刷新补全且请求补全
-	-- todo
-
+	complete_src:call_src(ctx)
 end
 
-function complete_engine:add_complete_items(ctx, items)
+function complete_engine:add_complete_items(ctx, items, incomplete)
+	if not items or #items == 0 then
+		return
+	end
+
 	local offset = ctx:offset_typed(self.ctx)
 	if not vim.deep_equal(self.ctx, ctx) and not offset then
-	end
-	if not (self.ctx and ctx and items and #items == 0) then
-		return
-	end
-	
-
-	if not self.ctx:eq(ctx) then
 		return
 	end
 
-	self.ctx.incomplete = ctx.incomplete
+	if offset then
+		self:convert_items_to_self_ctx(items, offset)
+	end
+
+	self.incomplete = incomplete
 
 	if self.complete_items == nil then
 		self.complete_items = {}
@@ -79,72 +74,68 @@ function complete_engine:add_complete_items(ctx, items)
 		table.insert(self.complete_items, v)
 	end
 
-	self:init_matches()
+	self:refresh_complete()
 	return
 end
 
-function complete_engine:init_matches()
-	if self.complete_items == nil or #self.complete_items == 0 then
-		return
+function complete_engine:refresh_complete(ctx)
+	local cur_ctx = ctx or context::new()
+	local offset = ctx.offset_typed(self.ctx)
+	local matches = {}
+	if vim.deep_equal(ctx, self.ctx) then
+		matches = self.complete_items
+	elseif offset then
+		matches = fuzzy.filter_completion_items(offset, self.complete_items)
+	else
+		self::reset()
 	end
-
-	local cur_ctx = context:new()
-	if cur_ctx == nil then
-		return
-	end
-
-	local offset_type = self.ctx:offset_typed(cur_ctx)
-	if offset_type == nil then
-		return
-	end
-
-	if self.matches == nil then
-		self.matches = {}
-	end
-	self.matches.pre_offset = offset_type
-
-	local add_matches = fuzzy.filter_completion_items(offset_type, self.complete_items)
-	self.matches.items = add_matches
-	self:call_vim_complete()
-	return
+	vim.fn.complete(self.ctx.pos.position.character+1, matches)
 end
 
-
-function complete_engine:refresh_matches(offset)
-	local matches = self.complete_items
-	if self.matches ~= nil and self.matches.pre_offset ~= nil  and #self.matches.pre_offset > 0 then
-		if  p_helper.has_prefix(offset, self.matches.pre_offset) then
-			matches = self.matches.items
-		end
+-- 由于self.ctx 与 ctx的col可能不一样
+-- 则需要将新增item转换成当前ctx, 以达到显示正确
+function complete_engine:convert_items_to_self_ctx(items, offset)
+	-- local new_items = {}
+	for _, item in pairs(items) do
+		item.word = offset .. item.word
+		-- table.insert(new_items, item.word)
 	end
-
-	if self.matches == nil then
-		self.matches = {}
-	end
-	self.matches.pre_offset = offset
-	if matches == nil or #matches == 0 then
-		return
-	end
-
-	local add_matches = fuzzy.filter_completion_items(self.matches.pre_offset, self.complete_items)
-	self.matches.items = add_matches
-	self:call_vim_complete()
+	-- return new_items
 end
 
+--function complete_engine:init_matches()
+--	if not self.complete_items or #self.complete_items == 0 then
+--		return
+--	end
+--
+--	local cur_ctx = context:new()
+--	if cur_ctx == nil then
+--		return
+--	end
+--
+--	local offset_type = self.ctx:offset_typed(cur_ctx)
+--	if offset_type == nil then
+--		return
+--	end
+--
+--	if self.matches == nil then
+--		self.matches = {}
+--	end
+--	self.matches.pre_offset = offset_type
+--
+--	local add_matches = fuzzy.filter_completion_items(offset_type, self.complete_items)
+--	self.matches.items = add_matches
+--	self:call_vim_complete()
+--	return
+--end
 
-function complete_engine:call_vim_complete()
-	if self.matches.items == nil or #self.matches.items == 0 then
-		return
-	end
-	p_helper.complete(self.ctx.col + 1, self.matches.items)
-end
+
 
 
 return {
 	reset = function() complete_engine:reset() end,
 	text_changed = function(ctx) complete_engine:text_changed(ctx) end,
-	add_complete_items = function(ctx, items) complete_engine:add_complete_items(ctx, items) end,
-	add_src = function(handle, src_kind) complete_src:add_src(handle, src_kind) end,
+	add_complete_items = function(ctx, items, incomplete) complete_engine:add_complete_items(ctx, items, incomplete) end,
 }
 
 -- module.leave = function()

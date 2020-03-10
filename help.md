@@ -30,3 +30,5 @@ vim.tbl_values({t})
 vim.trim({s})
 vim.deep_equal()
 startswith({s},
+
+incomplete 未完善

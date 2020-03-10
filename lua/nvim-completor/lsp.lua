@@ -7,7 +7,6 @@
 --       Desc: lsp parse
 --------------------------------------------------
 
-local p_helper = require("nvim-completor/helper")
 local semantics = require("nvim-completor/semantics")
 
 local module = {}
@@ -123,7 +122,7 @@ private.complete_item_lsp2vim = function(ctx, item)
 		menu = private.get_kind_text(item.kind)
 	end
 
-	local ud = p_helper.json_encode(user_data)
+	local ud = vim.fn.json_encode(user_data)
     return {word = word, abbr = abbr, menu = menu, icase = 1, dup = 0, user_data = ud}
 end
 
@@ -140,7 +139,7 @@ module.complete_items_lsp2vim = function(ctx, data)
 end
 
 module.apply_complete_user_data = function(data)
-	local user_data = p_helper.json_decode(data)
+	local user_data = vim.fn.json_decode(data)
 	if user_data == nil then
 		return
 	end
