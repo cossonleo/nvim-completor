@@ -15,8 +15,7 @@ local complete_src = {
 }
 
 function complete_src:add_src(handle, kind)
-	if kind == nil or kind == "" then
-		table.insert(self.kindless, handle)
+	if not kind or kind == "" then
 		return
 	end
 

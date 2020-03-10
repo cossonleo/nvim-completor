@@ -11,22 +11,35 @@ local module = {}
 local api = vim.api
 local vimfn = vim.fn
 local semantics = require('nvim-completor/semantics')
+local context = require('nvim-completor/context')
+local completor = require('nvim-completor/completor')
 
---local complete_core = require("nvim-completor/core")
---local engine = complete_core
+module.ctx = nil
+
+function _text_changed()
+	local cur_ctx = context:new()
+	if module.ctx and vim.deep_equal(module.ctx, cur_ctx) then
+		return
+	end
+
+	module.ctx = cur_ctx
+	completor.text_changed(module.ctx)
+end
 
 module.on_insert = function()
+	_text_changed()
 	print('insert')
 end
 
 module.on_leave = function()
+	module.ctx = nil
 	print('leave')
 end
 
 module.on_text_changed_i = function()
+	_text_changed()
 
 	print('on_text_changed_i position ' .. vimfn.json_encode(vim.lsp.util.make_position_params()))
-	--print('on_text_changed_i ' .. #api.nvim_get_vvar('completed_item'))
 end
 
 module.on_text_changed_p = function()
@@ -36,12 +49,12 @@ module.on_text_changed_p = function()
 		return
 	end
 
-	-- 刷新匹配 -- 模糊匹配
-	--print('on_text_changed_p complete info ' .. vimfn.json_encode(complete_info))
+	_text_changed()
 end
 
 module.on_complete_done = function()
-	if #api.nvim_get_vvar('completed_item') == 0 then
+	local complete_item = api.nvim_get_vvar('completed_item')
+	if vim.tbl_isempty(complete_item) then
 		return
 	end
 

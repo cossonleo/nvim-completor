@@ -9,7 +9,6 @@
 
 local p_helper = require("nvim-completor/helper")
 local semantics = require("nvim-completor/semantics")
-local log = require("nvim-completor/log")
 
 local module = {}
 local private = {}

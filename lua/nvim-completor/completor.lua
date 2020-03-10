@@ -7,9 +7,8 @@
 --       Desc: out interface
 --------------------------------------------------
 
-local core = require("nvim-completor/core")
+local complete_src = require("nvim-completor/src_manager")
 local lsp = require("nvim-completor/lsp")
-local state = require("nvim-completor/semantics")
 
 local module = {}
 
@@ -25,35 +24,42 @@ function complete_engine:reset()
 	self.matches = nil
 end
 
-function complete_engine:text_changed()
+function complete_engine:text_changed(ctx)
+	if self.ctx and vim.deep_equal(ctx, self.ctx) then
+		return
+	end
 	if not complete_src:has_complete_src() then
 		return
 	end
 
-	local ctx = context:new()
-	if ctx == nil then -- 终止补全
-		self:reset()
+	if not ctx:can_fire_complete() then
 		return
 	end
 
-	if self.ctx ~= nil and not self.ctx.incomplete then
-		local offset_typed = self.ctx:offset_typed(ctx)
-		if offset_typed == "" then
-			return
-		end
-
-		if offset_typed ~= nil then
-			self:refresh_matches(offset_typed)
-			return
-		end
+	local offset = ctx.is_offset_ctx(self.ctx)
+	-- 请求补全
+	if not self.ctx or not offset then
+		self:reset()
+		self.ctx = ctx
+		complete_src:call_src(ctx)
+		return
 	end
 
-	self:reset()
-	self.ctx = ctx
-	complete_src:call_src(ctx)
+	-- 刷新补全
+	if not self.ctx.incomplete then
+		complete_engine:refresh_matches(offset)
+		return
+	end
+
+	-- 刷新补全且请求补全
+	-- todo
+
 end
 
 function complete_engine:add_complete_items(ctx, items)
+	local offset = ctx:offset_typed(self.ctx)
+	if not vim.deep_equal(self.ctx, ctx) and not offset then
+	end
 	if not (self.ctx and ctx and items and #items == 0) then
 		return
 	end
@@ -136,7 +142,7 @@ end
 
 return {
 	reset = function() complete_engine:reset() end,
-	text_changed = function() complete_engine:text_changed() end,
+	text_changed = function(ctx) complete_engine:text_changed(ctx) end,
 	add_complete_items = function(ctx, items) complete_engine:add_complete_items(ctx, items) end,
 	add_src = function(handle, src_kind) complete_src:add_src(handle, src_kind) end,
 }

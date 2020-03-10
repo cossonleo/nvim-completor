@@ -27,21 +27,26 @@ private.lang_trigger_pattern = {
 
 private.is_fire_complete = function(typed)
 	local start, tail = string.find(typed, '[%w_]+$')
-	if start ~= nil or tail ~= nil then
+	if start or tail then
 		if tail - start + 1 >= private.trigger_len then
 			return true
 		end
 	end
-	if private.ft ~= nil and private.ft ~= "" then
-		local trigger_patterns = private.lang_trigger_pattern[private.ft]
-		if trigger_patterns ~= nil then
-			for _, sub in ipairs(trigger_patterns) do
-				local pattern = sub .. "[%w_]*$"
-				start = string.find(typed, pattern)
-				if start ~= nil then
-					return true
-				end
-			end
+
+	if not private.ft then
+		return false
+	end
+
+	local trigger_patterns = private.lang_trigger_pattern[private.ft]
+	if not trigger_patterns then
+		return false
+	end
+
+	for _, sub in ipairs(trigger_patterns) do
+		local pattern = sub .. "[%w_]*$"
+		start = string.find(typed, pattern)
+		if start then
+			return true
 		end
 	end
 	return false
