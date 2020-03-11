@@ -1,4 +1,5 @@
 
+local log = require('nvim-completor/log')
 local manager = require("nvim-completor/src_manager")
 local completor = require("nvim-completor/completor")
 
@@ -10,3 +11,4 @@ function response(ctx)
 end
 
 manager.add_src("builtin_lsp", request_src)
+log.info("add builtin lsp complete source finish")

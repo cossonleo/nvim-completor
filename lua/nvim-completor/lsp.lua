@@ -8,6 +8,7 @@
 --------------------------------------------------
 
 local semantics = require("nvim-completor/semantics")
+local protocol = require('vim.lsp.protocol')
 
 local module = {}
 local private = {}
@@ -45,85 +46,70 @@ private.get_kind_text = function(index)
 end
 
 -- lsp range pos: zero-base
-private.complete_item_lsp2vim = function(ctx, item)
-	local word = item['label']
+private.complete_item_lsp2vim = function(ctx, complete_item)
     local abbr = item['label']
-    local menu = ""
+	local word = (complete_item.textEdit and complete_item.textEdit.newText) or complete_item.insertText or complete_item.label
 
-	if item['insertText'] ~= nil and item['insertText'] ~= "" then
-        word = item['insertText'] -- 带有snippet
-	end
+    local info = ' '
+    local documentation = completion_item.documentation
+    if documentation then
+      if type(documentation) == 'string' and documentation ~= '' then
+        info = documentation
+      elseif type(documentation) == 'table' and type(documentation.value) == 'string' then
+        info = documentation.value
+      end
+    end
 
-	local user_data = {}
-	user_data.bno = ctx.bno
+    return {
+      word = word,
+      abbr = completion_item.label,
+      kind = protocol.CompletionItemKind[completion_item.kind] or '',
+      menu = completion_item.detail or '',
+      info = info,
+      icase = 1,
+      dup = 1,
+      empty = 1,
+	  user_data = vim.fn.json_encode({lsp = completion_item}),
+    }
 
-	local typed_len = ctx.typed:len()
-	local start = 0
-	local tail = 0
-	if item['textEdit'] ~= nil then
-		start = item['textEdit']['range']['start']['character'] + 1
-		tail = item['textEdit']['range']['end']['character'] + 1
-		word = item['textEdit']['newText']
-		user_data.line = item['textEdit']['range']['start']['line']
-	else
-		--word = abbr
-		user_data.line = ctx.line - 1
-		start, tail = semantics.new_text_pos(ctx)
-		if start == nil or tail == nil then
-			start = ctx.col + 1
-			tail = ctx.col + 1
-		end
-	end
 
-	user_data.content = ctx.typed:sub(1, start - 1) .. word .. ctx.typed:sub(tail)
-	user_data.col = start + #word
-	if start <= ctx.col then
-		word = word:sub(ctx.col - start + 2)
-	end
+--	local user_data = {}
+--	user_data.bno = ctx.bno
+--
+--	local typed_len = ctx.typed:len()
+--	local start = 0
+--	local tail = 0
 --	if item['textEdit'] ~= nil then
+--		start = item['textEdit']['range']['start']['character'] + 1
+--		tail = item['textEdit']['range']['end']['character'] + 1
+--		word = item['textEdit']['newText']
 --		user_data.line = item['textEdit']['range']['start']['line']
---		user_data.bno = ctx.bno
---
---		local new_text = item['textEdit']['newText']
---		local typed_len = ctx.typed:len()
---		-- lsp range zero-base pos: start + 1 - 1
---		local front  = item['textEdit']['range']['start']['character']
---		if front < typed_len then
---			user_data.content = ctx.typed:sub(1, front) .. new_text
---		else
---			user_data.content = ctx.typed .. new_text
---		end
---		-- 补全后光标的位置
---		user_data.col = user_data.content:len()
---
---		-- zero-based exclude: tail + 1 + 1 - 1
---		local tail = item['textEdit']['range']['end']['character'] + 1
---		if tail < typed_len then
---			user_data.content = user_data.content .. ctx.typed:sub(tail)
---		end
---
---		-- ctx.col 补全触发最后一个字符的位置
---		if front < ctx.col then
---			word = new_text:sub(ctx.col - front + 1)
---		end
 --	else
---		local typed = ctx.typed:sub(1, ctx.col)
---		local start, tail = typed:find("[%w_]+$")
---		if start ~= nil and tail ~= nil then
---			word = word:sub(tail - start + 2) -- tail - start + 1 + 1
+--		--word = abbr
+--		user_data.line = ctx.line - 1
+--		start, tail = semantics.new_text_pos(ctx)
+--		if start == nil or tail == nil then
+--			start = ctx.col + 1
+--			tail = ctx.col + 1
 --		end
---    end
-
-	if item['detail'] ~= nil then
-		abbr = abbr .. ' ' .. item['detail']
-	end
-
-	if item.kind ~= nil then
-		menu = private.get_kind_text(item.kind)
-	end
-
-	local ud = vim.fn.json_encode(user_data)
-    return {word = word, abbr = abbr, menu = menu, icase = 1, dup = 0, user_data = ud}
+--	end
+--
+--	user_data.content = ctx.typed:sub(1, start - 1) .. word .. ctx.typed:sub(tail)
+--	user_data.col = start + #word
+--	if start <= ctx.col then
+--		word = word:sub(ctx.col - start + 2)
+--	end
+--
+--	if item['detail'] ~= nil then
+--		abbr = abbr .. ' ' .. item['detail']
+--	end
+--
+--	if item.kind ~= nil then
+--		menu = private.get_kind_text(item.kind)
+--	end
+--
+--	local ud = vim.fn.json_encode(user_data)
+--    return {word = word, abbr = abbr, menu = menu, icase = 1, dup = 0, user_data = ud}
 end
 
 module.complete_items_lsp2vim = function(ctx, data)

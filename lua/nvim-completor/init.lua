@@ -13,6 +13,7 @@ local vimfn = vim.fn
 local semantics = require('nvim-completor/semantics')
 local context = require('nvim-completor/context')
 local completor = require('nvim-completor/completor')
+local log = require('nvim-completor/log')
 
 module.ctx = nil
 
@@ -66,7 +67,9 @@ module.on_buf_enter = function()
 end
 
 module.on_load = function()
+	log.set_level(1)
 	api.nvim_set_option('cot', "menuone,preview,noselect,noinsert")
+	log.info("nvim completor loaded finish")
 end
 
 return module
