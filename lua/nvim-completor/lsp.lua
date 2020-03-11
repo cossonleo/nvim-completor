@@ -9,49 +9,38 @@
 
 local semantics = require("nvim-completor/semantics")
 local protocol = require('vim.lsp.protocol')
+local log = require("nvim-completor/log")
 
 local module = {}
 local private = {}
 
-private.kind_text_mappings = {
-            'text',
-            'method',
-            'function',
-            'constructor',
-            'field',
-            'variable',
-            'class',
-            'interface',
-            'module',
-            'property',
-            'unit',
-            'value',
-            'enum',
-            'keyword',
-            'snippet',
-            'color',
-            'file',
-            'reference',
-		}
-
-private.get_kind_text = function(index)
-	if index == nil then
-		return ''
-	end
-	local t = private.kind_text_mappings[index]
-	if t == nil then
-		return ''
-	end
-	return t
-end
 
 -- lsp range pos: zero-base
-private.complete_item_lsp2vim = function(ctx, complete_item)
-    local abbr = item['label']
+private.lsp_item2vim = function(ctx, complete_item)
+    local abbr = complete_item.label
 	local word = (complete_item.textEdit and complete_item.textEdit.newText) or complete_item.insertText or complete_item.label
 
+	-- 校正abbr
+	if not complete_item.textEdit and not complete_item.insertText then
+		local prefix = ctx:typed_to_cursor()
+		local ps, pe = prefix:find("%w_+$")
+		if ps and pe then
+			abbr = prefix:sub(ps, pe) .. abbr
+		end
+	end
+
+	-- 组装user_data
+	local user_data = {}
+	if complete_item.textEdit then
+		local apply_text = {}
+		apply_text.typed = ctx.typed
+		apply_text.range = complete_item.textEdit.range
+		apply_text.newText = complete_item.textEdit.newText
+		user_data = {apply_text = apply_text}
+	end
+
     local info = ' '
-    local documentation = completion_item.documentation
+    local documentation = complete_item.documentation
     if documentation then
       if type(documentation) == 'string' and documentation ~= '' then
         info = documentation
@@ -62,14 +51,14 @@ private.complete_item_lsp2vim = function(ctx, complete_item)
 
     return {
       word = word,
-      abbr = completion_item.label,
-      kind = protocol.CompletionItemKind[completion_item.kind] or '',
-      menu = completion_item.detail or '',
+      abbr = complete_item.label,
+      kind = protocol.CompletionItemKind[complete_item.kind] or '',
+      menu = complete_item.detail or '',
       info = info,
       icase = 1,
       dup = 1,
       empty = 1,
-	  user_data = vim.fn.json_encode({lsp = completion_item}),
+	  user_data = vim.fn.json_encode(user_data),
     }
 
 
@@ -112,10 +101,10 @@ private.complete_item_lsp2vim = function(ctx, complete_item)
 --    return {word = word, abbr = abbr, menu = menu, icase = 1, dup = 0, user_data = ud}
 end
 
-module.complete_items_lsp2vim = function(ctx, data)
+module.lsp_items2vim = function(ctx, data)
 	local items = {}
 	for _, v in pairs(data) do
-		local item = private.complete_item_lsp2vim(ctx, v)
+		local item = private.lsp_item2vim(ctx, v)
 		if item ~= nil then
 			table.insert(items, item)
 		end
@@ -125,17 +114,34 @@ module.complete_items_lsp2vim = function(ctx, data)
 end
 
 module.apply_complete_user_data = function(data)
+
+--	local user_data = {}
+--	if complete_item.textEdit then
+--		local apply_text = {}
+--		apply_text.typed = ctx.typed
+--		apply_text.range = complete_item.textEdit.range
+--		apply_text.newText = complete_item.textEdit.range.newText
+--		user_data = {apply_text = apply_text}
+--
+--		start = item['textEdit']['range']['start']['character'] + 1
+--		tail = item['textEdit']['range']['end']['character'] + 1
+--		word = item['textEdit']['newText']
+--		user_data.line = item['textEdit']['range']['start']['line']
+
 	local user_data = vim.fn.json_decode(data)
-	if user_data == nil then
+	if vim.tbl_isempty(user_data) then
 		return
 	end
-	if user_data.line == nil then
-		return
-	end
-	local bno = user_data.bno
-	local line = user_data.line
-	local content = user_data.content
-	local col = user_data.col
+
+	local typed = user_data.apply_text.typed
+	local newText = user_data.apply_text.newText
+	local line = user_data.apply_text.range.start.line
+	local start = user_data.apply_text.range.start.character
+	local tail = user_data.apply_text.range['end'].character
+	local content = typed:sub(1, start) .. newText .. typed:sub(tail + 1)
+
+	log.debug("apply ", content)
+
 
 	vim.api.nvim_buf_set_lines(bno, line, line + 1, false, {content})
 end

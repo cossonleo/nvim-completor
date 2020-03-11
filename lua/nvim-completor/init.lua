@@ -14,6 +14,7 @@ local semantics = require('nvim-completor/semantics')
 local context = require('nvim-completor/context')
 local completor = require('nvim-completor/completor')
 local log = require('nvim-completor/log')
+local ncp_lsp = require("nvim-completor/lsp")
 
 module.ctx = nil
 
@@ -56,6 +57,7 @@ module.on_complete_done = function()
 	if vim.tbl_isempty(complete_item) then
 		return
 	end
+	ncp_lsp.apply_complete_user_data(complete_item.user_data)
 
 	-- 补全 写入选中项
 	print('on_complete_done ' .. vimfn.json_encode(api.nvim_get_vvar('completed_item')))

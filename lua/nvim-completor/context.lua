@@ -45,7 +45,7 @@ function context:offset_typed(ctx)
 end
 
 function context:typed_to_cursor()
-	return self.typed.sub(1, self.pos.position.character)
+	return self.typed:sub(1, self.pos.position.character)
 end
 
 function context:can_fire_complete()

@@ -8,6 +8,7 @@
 --------------------------------------------------
 
 local semantics = require("nvim-completor/semantics")
+local log = require("nvim-completor/log")
 
 local complete_src = {}
 
@@ -33,9 +34,12 @@ function complete_src:has_complete_src()
 end
 
 function complete_src:call_src(ctx)
+	log.debug("call src")
 	local p = self.public
 	if p then
-		for  _, handle in pairs(p) do
+		log.debug("public %s", vim.tbl_keys(p))
+		for  k, handle in pairs(p) do
+			log.debug("call %s", p)
 			handle(ctx)
 		end
 	end

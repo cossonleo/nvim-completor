@@ -32,3 +32,11 @@ vim.deep_equal()
 startswith({s},
 
 incomplete 未完善
+
+complete item
+
+{
+	abbr: 展示在候选窗口中， 用于展示补全的目标
+	word: 不展示在候选窗口中
+	menu: 对候项的描述
+}
