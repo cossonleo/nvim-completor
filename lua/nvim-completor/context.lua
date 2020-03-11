@@ -36,16 +36,20 @@ function context:offset_typed(ctx)
 	if not vim.startswith(self.typed, front_typed) then
 		return nil
 	end
-	local offset_typed = ctx.typed:sub(ctx.pos.position.character + 1, self.pos.position.character)
+	local offset_typed = self.typed:sub(ctx.pos.position.character + 1, self.pos.position.character)
+	local st, ed = string.find(offset_typed, '[%w_]+')
+	if not st or not ed or st ~= 1 or ed ~= #offset_typed then
+		return nil
+	end
 	return offset_typed
 end
 
 function context:typed_to_cursor()
-	return self.typed.sub(1, ctx.pos.position.character)
+	return self.typed.sub(1, self.pos.position.character)
 end
 
 function context:can_fire_complete()
-	local typed = self.typed.sub(1, ctx.pos.position.character)
+	local typed = self.typed:sub(1, self.pos.position.character)
 	return semantics.is_fire_complete(typed)
 end
 

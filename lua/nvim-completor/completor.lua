@@ -10,6 +10,7 @@
 local complete_src = require("nvim-completor/src_manager")
 local lsp = require("nvim-completor/lsp")
 local context = require("nvim-completor/context")
+local fuzzy = require("nvim-completor/fuzzy-match")
 
 local module = {}
 
@@ -37,17 +38,22 @@ function complete_engine:text_changed(ctx)
 		return
 	end
 
-	local offset = ctx.is_offset_ctx(self.ctx)
-	if offset and not self.incomplete then
-		complete_engine:refresh_complete(ctx)
-		return
-	end
+	local offset = ctx:offset_typed(self.ctx)
+	 if offset and not self.incomplete then
+		 if not ctx then
+			 return
+		 else
+		 end
+	 	 complete_engine:refresh_complete(ctx)
+	 	return
+	 end
 
-	if not offset then
-		self:reset()
-		self.ctx = ctx
-	end
-	complete_src:call_src(ctx)
+	 if not offset then
+	 	self:reset()
+	 	self.ctx = ctx
+	else
+	 end
+	 complete_src:call_src(ctx)
 end
 
 function complete_engine:add_complete_items(ctx, items, incomplete)
@@ -74,22 +80,23 @@ function complete_engine:add_complete_items(ctx, items, incomplete)
 		table.insert(self.complete_items, v)
 	end
 
-	self:refresh_complete()
+	-- self:refresh_complete()
 	return
 end
 
 function complete_engine:refresh_complete(ctx)
 	local cur_ctx = ctx or context:new()
-	local offset = ctx.offset_typed(self.ctx)
+	local offset = cur_ctx:offset_typed(self.ctx)
 	local matches = {}
-	if vim.deep_equal(ctx, self.ctx) then
-		matches = self.complete_items
-	elseif offset then
+	if offset then
 		matches = fuzzy.filter_completion_items(offset, self.complete_items)
+	elseif vim.deep_equal(ctx, self.ctx) then
+		matches = self.complete_items
 	else
 		self:reset()
 	end
-	vim.fn.complete(self.ctx.pos.position.character+1, matches)
+	--vim.fn.complete(self.ctx.pos.position.character+1, matches)
+	vim.fn.complete(self.ctx.pos.position.character+1, {'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'})
 end
 
 -- 由于self.ctx 与 ctx的col可能不一样

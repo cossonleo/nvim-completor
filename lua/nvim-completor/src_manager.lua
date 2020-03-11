@@ -9,43 +9,35 @@
 
 local semantics = require("nvim-completor/semantics")
 
-local complete_src = {
-	public = {},
-	kindless = {},
-}
+local complete_src = {}
 
-function complete_src:add_src(handle, kind)
+function complete_src:add_src(ident, handle, kind)
 	if not kind or kind == "" then
-		return
-	end
+		if not complete_src["public"] then
+			complete_src["public"] = {}
+		end
 
-	if kind == "public" then
-		table.insert(self.public, handle)
+		complete_src.public[ident] = handle
 		return
 	end
 
 	if self[kind] == nil then
 		self[kind] = {}
 	end
-	table.insert(self[kind], handle)
+	self[kind][ident] = handle
 end
 
 function complete_src:has_complete_src()
 	local cur_ft = semantics.get_ft()
-	if #self.public > 0 then
-		return true
-	end
-
-	if self[cur_ft] and #self[cur_ft] > 0 then
-		return true
-	end
-
-	return false
+	return self.public or self[cur_ft]
 end
 
 function complete_src:call_src(ctx)
-	for  _, handle in pairs(self.public) do
-		handle(ctx)
+	local p = self.public
+	if p then
+		for  _, handle in pairs(p) do
+			handle(ctx)
+		end
 	end
 
 	local cur_ft = semantics.get_ft()
@@ -57,11 +49,4 @@ function complete_src:call_src(ctx)
 	end
 end
 
-
-
-return {
-	reset = function() complete_engine:reset() end,
-	text_changed = function() complete_engine:text_changed() end,
-	add_complete_items = function(ctx, items) complete_engine:add_complete_items(ctx, items) end,
-	add_src = function(handle, src_kind) complete_src:add_src(handle, src_kind) end,
-}
+return complete_src

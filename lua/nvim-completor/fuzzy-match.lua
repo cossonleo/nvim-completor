@@ -13,6 +13,10 @@ local module = {}
 
 module.filter_completion_items = function (prefix, matches)
     local result = {}
+
+	if not matches or #matches == 0 then
+		return result
+	end
     local unsorted_matches = {}
     for i = 1, #matches do
         local match = matches[i]

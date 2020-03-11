@@ -28,18 +28,16 @@ end
 
 module.on_insert = function()
 	_text_changed()
-	print('insert')
 end
 
 module.on_leave = function()
 	module.ctx = nil
-	print('leave')
 end
 
 module.on_text_changed_i = function()
 	_text_changed()
 
-	print('on_text_changed_i position ' .. vimfn.json_encode(vim.lsp.util.make_position_params()))
+	-- print('on_text_changed_i position ' .. vimfn.json_encode(vim.lsp.util.make_position_params()))
 end
 
 module.on_text_changed_p = function()
