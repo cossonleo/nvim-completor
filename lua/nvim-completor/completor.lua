@@ -93,7 +93,11 @@ function complete_engine:refresh_complete(ctx)
 		self:reset()
 		return
 	end
-	vim.fn.complete(self.ctx.pos.position.character+1, matches)
+
+	local mode = vim.api.nvim_get_mode().mode
+	if mode == "i" or mode == "ic" or mode == "ix" then
+		vim.fn.complete(self.ctx.pos.position.character+1, matches)
+	end
 end
 
 -- 由于self.ctx 与 ctx的col可能不一样

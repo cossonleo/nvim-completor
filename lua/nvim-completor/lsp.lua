@@ -129,7 +129,7 @@ module.apply_complete_user_data = function(data)
 --		user_data.line = item['textEdit']['range']['start']['line']
 
 	local user_data = vim.fn.json_decode(data)
-	if vim.tbl_isempty(user_data) then
+	if type(user_data) ~= "table" or vim.tbl_isempty(user_data) then
 		return
 	end
 
