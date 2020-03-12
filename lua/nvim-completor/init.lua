@@ -75,7 +75,7 @@ end
 
 module.on_load = function()
 	log.set_level(1)
-	api.nvim_set_option('cot', "menuone,preview,noselect,noinsert")
+	api.nvim_set_option('cot', "menuone,noselect,noinsert")
 	log.info("nvim completor loaded finish")
 end
 

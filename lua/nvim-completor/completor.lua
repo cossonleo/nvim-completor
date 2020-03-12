@@ -28,9 +28,6 @@ function complete_engine:reset()
 end
 
 function complete_engine:text_changed(ctx)
-	if self.ctx and vim.deep_equal(ctx, self.ctx) then
-		return
-	end
 	if not complete_src:has_complete_src() then
 		return
 	end
@@ -40,7 +37,7 @@ function complete_engine:text_changed(ctx)
 	end
 
 	local offset = ctx:offset_typed(self.ctx)
-	if offset and not self.incomplete then
+	if (offset and not self.incomplete) or vim.deep_equal(ctx, self.ctx) then
 		complete_engine:refresh_complete(ctx)
 		return
 	end

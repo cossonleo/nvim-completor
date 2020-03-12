@@ -3,6 +3,36 @@ local log = require('nvim-completor/log')
 local manager = require("nvim-completor/src-manager")
 local completor = require("nvim-completor/completor")
 local ncp_lsp = require("nvim-completor/lsp")
+local semantics = require("nvim-completor/semantics")
+
+function filter_items(ctx, items)
+	if not items or #items == 0 then
+		return {}
+	end
+	local ft = semantics.get_ft()
+	if not ft or ft ~= "rust" then
+		return items
+	end
+
+	local new_items = items
+
+	local prefix = ctx:typed_to_cursor()
+	prefix = prefix:match("[%w_]+$")
+	if prefix and #prefix > 0 then
+		new_items = vim.tbl_filter(function(item)
+		  local word = item.textEdit.newText
+		  return vim.startswith(word, prefix)
+		end, items)
+	end
+
+	-- 暂时去除snippet支持
+	if new_items then
+		for _, item in pairs(new_items) do
+			item.textEdit.newText = item.textEdit.newText:match("^[%w_]+")
+		end
+	end
+	return new_items
+end
 
 function request_src(ctx)
 	log.debug("lsp request")
@@ -21,13 +51,12 @@ function request_src(ctx)
 			end
 
 			local items = result.items or result
-			local items = ncp_lsp.lsp_items2vim(ctx, items)
-
+			items = filter_items(ctx, items)
+			items = ncp_lsp.lsp_items2vim(ctx, items)
 			if not items or #items == 0 then
 				return
 			end
 			completor.add_complete_items(ctx, items)
-			log.debug(result)
             -- on_completion_result(context, err, _, result)
         end
     )

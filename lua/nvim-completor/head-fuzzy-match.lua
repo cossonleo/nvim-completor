@@ -10,10 +10,9 @@
 local module = {}
 
 module.simple_match = function(matchs, pattern)
-	local prefix = "^" .. pattern
 	local result = {}
 	for _, match in ipairs(matchs) do
-		if string.find(match, prefix) ~= nil then
+		if vim.startswith(match, prefix) then
 			table.insert(result, match)
 		end
 	end

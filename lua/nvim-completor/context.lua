@@ -37,11 +37,11 @@ function context:offset_typed(ctx)
 		return nil
 	end
 	local offset_typed = self.typed:sub(ctx.pos.position.character + 1, self.pos.position.character)
-	local st, ed = string.find(offset_typed, '[%w_]+')
-	if not st or not ed or st ~= 1 or ed ~= #offset_typed then
-		return nil
+	local check = offset_typed:match('[%w_]+')
+	if check and offset_typed == check then
+		return check
 	end
-	return offset_typed
+	return nil
 end
 
 function context:typed_to_cursor()

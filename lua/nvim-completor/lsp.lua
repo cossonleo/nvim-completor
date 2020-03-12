@@ -18,25 +18,51 @@ local private = {}
 -- lsp range pos: zero-base
 private.lsp_item2vim = function(ctx, complete_item)
     local abbr = complete_item.label
-	local word = (complete_item.textEdit and complete_item.textEdit.newText) or complete_item.insertText or complete_item.label
-
-	-- 校正abbr
-	if not complete_item.textEdit and not complete_item.insertText then
-		local prefix = ctx:typed_to_cursor()
-		local ps, pe = prefix:find("%w_+$")
-		if ps and pe then
-			abbr = prefix:sub(ps, pe) .. abbr
-		end
-	end
+	local word = ""
 
 	-- 组装user_data
 	local user_data = {}
-	if complete_item.textEdit then
+	if complete_item.textEdit and complete_item.textEdit.newText then
 		local apply_text = {}
 		apply_text.typed = ctx.typed
 		apply_text.range = complete_item.textEdit.range
 		apply_text.newText = complete_item.textEdit.newText
-		user_data = {apply_text = apply_text}
+		user_data = apply_text
+
+		word = complete_item.textEdit and complete_item.textEdit.newText
+
+		-- 需不需要判断开始行 TODO
+		--
+		-- 判断开始列
+		local textEdit_start = user_data.range.start.character
+		local ctx_start = ctx.pos.position.character
+		if  textEdit_start < ctx_start then
+			log.debug("start offset ", ctx_start - textEdit_start )
+			word = word:sub(ctx_start - textEdit_start + 1)
+		end
+
+		-- 判断结束列
+		local textEdit_tail = user_data.range['end'].character
+		local line_offset = user_data.range['end'].line - user_data.range.start.line
+		if line_offset == 1 then
+			textEdit_tail = #ctx.typed + 1
+		elseif line_offset > 1 then
+			-- TODO 暂不处理
+		end
+
+
+		-- if ctx_start < textEdit_tail then
+		-- 	local temp = textEdit_tail - ctx_start
+		-- 	local word_tail = #word - temp
+		-- 	log.debug("tail offset ", temp)
+		-- 	word = word:sub(1, word_tail)
+		-- end
+
+		-- log.debug("word ", word)
+
+	else
+		word = complete_item.insertText or complete_item.label
+		abbr = ctx:typed_to_cursor():match('[%w_]*$') .. abbr
 	end
 
     local info = ' '
@@ -133,11 +159,11 @@ module.apply_complete_user_data = function(data)
 		return
 	end
 
-	local typed = user_data.apply_text.typed
-	local newText = user_data.apply_text.newText
-	local line = user_data.apply_text.range.start.line
-	local start = user_data.apply_text.range.start.character
-	local tail = user_data.apply_text.range['end'].character
+	local typed = user_data.typed
+	local newText = user_data.newText
+	local line = user_data.range.start.line
+	local start = user_data.range.start.character
+	local tail = user_data.range['end'].character
 	local content = typed:sub(1, start) .. newText .. typed:sub(tail + 1)
 
 	log.debug("apply ", content)
