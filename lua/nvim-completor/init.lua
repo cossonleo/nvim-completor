@@ -39,9 +39,18 @@ module.on_text_changed_i = function()
 end
 
 module.on_text_changed_p = function()
-	print('on_text_changed_p position ' .. vimfn.json_encode(vim.lsp.util.make_position_params()))
-	local complete_info = vimfn.complete_info({'pum_visible', 'selected'})
+	local complete_info = vimfn.complete_info({'pum_visible', 'selected', "items"})
+	log.debug("changed p")
 	if complete_info.pum_visible == 1 and complete_info.selected ~= -1 then
+		log.debug("select")
+		module.on_select_item()
+		return
+	elseif complete_info.items and #complete_info.items then
+		log.debug("select top")
+		local bno = vim.api.nvim_get_current_buf()
+		local line = module.ctx.pos.position.line
+		local content = module.ctx.typed
+		vim.api.nvim_buf_set_lines(bno, line, line + 1, false, {content})
 		return
 	end
 
@@ -54,8 +63,14 @@ module.on_complete_done = function()
 		return
 	end
 	ncp_lsp.apply_complete_user_data(complete_item.user_data)
-	-- 补全 写入选中项
-	print('on_complete_done ' .. vimfn.json_encode(api.nvim_get_vvar('completed_item')))
+end
+
+module.on_select_item = function()
+	local complete_item = api.nvim_get_vvar('completed_item')
+	if type(complete_item) ~= "table" or vim.tbl_isempty(complete_item) then
+		return
+	end
+	ncp_lsp.apply_complete_user_data(complete_item.user_data)
 end
 
 module.on_insert = function()
