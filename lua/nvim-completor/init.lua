@@ -17,9 +17,11 @@ local log = require('nvim-completor/log')
 local ncp_lsp = require("nvim-completor/lsp")
 
 module.ctx = nil
+module.last_selected = -1
 
 function module:reset()
 	self.ctx = nil
+	self.last_selected = -1
 end
 
 function module:text_changed()
@@ -29,29 +31,29 @@ function module:text_changed()
 	end
 
 	self.ctx = cur_ctx
+	self.last_selected = -1
 	completor.text_changed(module.ctx)
 end
 
 module.on_text_changed_i = function()
 	module:text_changed()
-
-	-- print('on_text_changed_i position ' .. vimfn.json_encode(vim.lsp.util.make_position_params()))
 end
 
 module.on_text_changed_p = function()
-	local complete_info = vimfn.complete_info({'pum_visible', 'selected', "items"})
-	log.debug("changed p")
-	if complete_info.pum_visible == 1 and complete_info.selected ~= -1 then
-		log.debug("select")
-		module.on_select_item()
-		return
-	elseif complete_info.items and #complete_info.items then
-		log.debug("select top")
-		local bno = vim.api.nvim_get_current_buf()
-		local line = module.ctx.pos.position.line
-		local content = module.ctx.typed
-		vim.api.nvim_buf_set_lines(bno, line, line + 1, false, {content})
-		return
+	local complete_info = vimfn.complete_info({'pum_visible', 'selected'})
+	if complete_info.pum_visible then
+		if complete_info.selected ~= -1 then
+			log.debug("select")
+			module.on_select_item()
+			return
+		elseif module.last_selected ~= -1 then
+			log.debug("select top")
+			local bno = vim.api.nvim_get_current_buf()
+			local line = module.ctx.pos.position.line
+			local content = module.ctx.typed
+			vim.api.nvim_buf_set_lines(bno, line, line + 1, false, {content})
+			return
+		end
 	end
 
 	module:text_changed()

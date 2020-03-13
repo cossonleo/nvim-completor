@@ -50,9 +50,14 @@ private.lsp_item2vim = function(ctx, complete_item)
 		--	-- TODO 暂不处理
 		--end
 
-	elseif not complete_item.insertText then
-		word = complete_item.label
-		abbr = ctx:typed_to_cursor():match('[%w_]*$') .. abbr
+	elseif  complete_item.insertText and complete_item.label then
+		word = complete_item.insertText and complete_item.label
+		-- lua lsp 出现重复前部 若其他lsp server出现其他情况， 则需要加判断
+		local trigger_str = ctx:typed_to_cursor():match('[%w_]+$')
+		if vim.startswith(word, trigger_str) then
+			word = word:sub(#trigger_str + 1)
+		end
+		-- abbr = ctx:typed_to_cursor():match('[%w_]*$') .. abbr
 	else
 		word = complete_item.insertText
 	end
@@ -94,7 +99,9 @@ module.lsp_items2vim = function(ctx, data)
 end
 
 module.apply_complete_user_data = function(data)
-
+	if not data or #data == 0 then
+		return
+	end
 	local user_data = vim.fn.json_decode(data)
 	if type(user_data) ~= "table" or vim.tbl_isempty(user_data) then
 		return
