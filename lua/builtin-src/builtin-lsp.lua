@@ -19,7 +19,7 @@ function filter_items(ctx, items)
 	prefix = prefix:match("[%w_]+$")
 	if prefix and #prefix > 0 then
 		new_items = vim.tbl_filter(function(item)
-		  local word = (item.textEdit and item.textEdit.newText) or item.insertText or item.label
+		  local word = item.insertText or item.label
 		  return vim.startswith(word, prefix)
 		end, items)
 	end
