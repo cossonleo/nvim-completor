@@ -10,22 +10,19 @@
 local semantics = require("nvim-completor/semantics")
 local log = require("nvim-completor/log")
 
-local complete_src = {}
+local complete_src = {
+	public = {}
+}
 
 function complete_src:add_src(ident, handle, kind)
+	log.trace("add complete src", ident, " ", kind)
 	if not kind or kind == "" then
-		if not complete_src["public"] then
-			complete_src["public"] = {}
-		end
-
-		complete_src.public[ident] = handle
-		return
+		self.public[ident] = handle
+	else
+		self[kind] = self[kind] or {}
+		self[kind][ident] = handle
 	end
-
-	if self[kind] == nil then
-		self[kind] = {}
-	end
-	self[kind][ident] = handle
+	log.debug("complete src", self)
 end
 
 function complete_src:has_complete_src()
@@ -33,21 +30,21 @@ function complete_src:has_complete_src()
 	return self.public or self[cur_ft]
 end
 
-function complete_src:call_src(ctx)
-	log.debug("call src")
-	local p = self.public
-	if p then
-		log.debug("public %s", vim.tbl_keys(p))
-		for  k, handle in pairs(p) do
-			log.debug("call %s", p)
+function complete_src:call_src(ctx, idents)
+	log.trace("call src, idents: ", idents)
+	log.debug("self.public", self.public)
+	for  k, handle in pairs(self.public) do
+		if not idents or vim.tbl_contains(idents, k) then
+			log.trace("call src: ", k)
 			handle(ctx)
 		end
 	end
 
 	local cur_ft = semantics.get_ft()
-	local handles = self[cur_ft]
-	if handles then
-		for _, handle in pairs(handles) do
+	local handles = self[cur_ft] or {}
+	for k, handle in pairs(handles) do
+		if not idents or vim.tbl_contains(idents, k) then
+			log.trace("call src: ", k)
 			handle(ctx)
 		end
 	end

@@ -10,6 +10,7 @@
 
 local module = {}
 local private = {}
+local log = require("nvim-completor/log")
 
 private.ft = nil
 private.trigger_len = 2
@@ -28,24 +29,29 @@ private.lang_trigger_pattern = {
 private.is_fire_complete = function(typed)
 	local suffix = typed:match('[%w_]+$')
 	if suffix and #suffix >= private.trigger_len then
+		log.trace("word trigger fire")
 		return true
 	end
 
 	if not private.ft then
+		log.trace("not found ft")
 		return false
 	end
 
 	local trigger_patterns = private.lang_trigger_pattern[private.ft]
 	if not trigger_patterns then
+		log.trace("not found ft:", private.ft, "sem trigger")
 		return false
 	end
 
 	for _, sub in ipairs(trigger_patterns) do
 		local pattern = sub .. "[%w_]*$"
+		log.debug("ft:", private.ft, "sem pattern", pattern)
 		if typed:match(pattern) then
 			return true
 		end
 	end
+	log.trace("not fire complete")
 	return false
 end
 

@@ -102,6 +102,7 @@ module.apply_complete_user_data = function(data)
 	if not data or #data == 0 then
 		return
 	end
+	log.trace("apply complete user data")
 	local user_data = vim.fn.json_decode(data)
 	if type(user_data) ~= "table" or vim.tbl_isempty(user_data) then
 		return
