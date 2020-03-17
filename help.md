@@ -22,7 +22,6 @@ nvim_get_current_line()
 nvim_win_get_cursor({window})
 				(row, col)(1, 0) -- index
 
-
 vim.tbl_isempty({t})
 vim.tbl_islist({t})
 vim.tbl_keys({t})
@@ -40,3 +39,12 @@ complete item
 	word: 不展示在候选窗口中
 	menu: 对候项的描述
 }
+
+
+cursor
+
+
+nvim_buf_get_mark()
+nvim_win_get_cursor()
+nvim_win_set_cursor
+	(1-based lines, 0-based columns)

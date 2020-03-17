@@ -118,6 +118,7 @@ module.apply_complete_user_data = function(data)
 	end
 	local content = typed:sub(1, start) .. newText .. typed:sub(tail + 1)
 	vim.api.nvim_buf_set_lines(bno, line, line + 1, false, {content})
+	vim.api.nvim_win_set_cursor(0, {line + 1, start + #newText})
 end
 
 return module
