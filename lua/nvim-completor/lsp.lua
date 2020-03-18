@@ -55,7 +55,7 @@ private.lsp_item2vim = function(ctx, complete_item)
 		word = complete_item.insertText or complete_item.label
 		-- lua lsp 出现重复前部 若其他lsp server出现其他情况， 则需要加判断
 		local trigger_str = ctx:typed_to_cursor():match('[%w_]+$')
-		if vim.startswith(word, trigger_str) then
+		if trigger_str and vim.startswith(word, trigger_str) then
 			word = word:sub(#trigger_str + 1)
 		end
 		-- abbr = ctx:typed_to_cursor():match('[%w_]*$') .. abbr
