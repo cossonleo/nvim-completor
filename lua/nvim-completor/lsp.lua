@@ -50,16 +50,17 @@ private.lsp_item2vim = function(ctx, complete_item)
 		--	-- TODO 暂不处理
 		--end
 
-	elseif  complete_item.insertText and complete_item.label then
-		word = complete_item.insertText and complete_item.label
+	--elseif  complete_item.insertText or complete_item.label then
+	else
+		word = complete_item.insertText or complete_item.label
 		-- lua lsp 出现重复前部 若其他lsp server出现其他情况， 则需要加判断
 		local trigger_str = ctx:typed_to_cursor():match('[%w_]+$')
 		if vim.startswith(word, trigger_str) then
 			word = word:sub(#trigger_str + 1)
 		end
 		-- abbr = ctx:typed_to_cursor():match('[%w_]*$') .. abbr
-	else
-		word = complete_item.insertText
+	--else
+	--	word = complete_item.insertText
 	end
 
     local info = ' '
