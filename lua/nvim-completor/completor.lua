@@ -13,8 +13,6 @@ local context = require("nvim-completor/context")
 local fuzzy = require("nvim-completor/fuzzy-match")
 local log = require("nvim-completor/log")
 
-local module = {}
-
 local complete_engine = {
 	ctx = nil,
 	complete_items = nil,

@@ -83,6 +83,8 @@ end
 
 module.on_insert = function()
 	log.trace("on insert")
+	local ft = api.nvim_buf_get_option(0, 'filetype')
+	semantics.set_ft(ft)
 	module.text_changed()
 end
 
@@ -94,9 +96,9 @@ module.on_leave = function()
 end
 
 module.on_buf_enter = function()
-	log.trace("on buf enter")
-	local ft = api.nvim_buf_get_option(0, 'filetype')
-	semantics.set_ft(ft)
+	--log.trace("on buf enter")
+	--local ft = api.nvim_buf_get_option(0, 'filetype')
+	--semantics.set_ft(ft)
 end
 
 module.on_load = function()

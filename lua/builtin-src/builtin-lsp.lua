@@ -27,7 +27,7 @@ function private.filter_items(ctx, items)
 		for _, item in pairs(new_items) do
 			local ft = semantics.get_ft()
 			if ft == "rust" then
-				item.textEdit.newText = item.textEdit.newText:match("^[%w_]+")
+				item.textEdit.newText = item.textEdit.newText:match("^[%w_]+[!]?")
 			elseif ft == "lua" then
 				item.insertText = item.insertText:match("^[%w_]+")
 			end

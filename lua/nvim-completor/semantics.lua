@@ -56,6 +56,7 @@ private.is_fire_complete = function(typed)
 end
 
 module.set_ft = function(ft)
+	log.trace("set filetype:", ft)
 	private.ft = ft
 end
 
