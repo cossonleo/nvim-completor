@@ -23,16 +23,16 @@ function private.filter_items(ctx, items)
 	end
 
 	-- 暂时去除snippet支持
-	if new_items then
-		for _, item in pairs(new_items) do
-			local ft = semantics.get_ft()
-			if ft == "rust" then
-				item.textEdit.newText = item.textEdit.newText:match("^[%w_]+[!]?")
-			elseif ft == "lua" then
-				item.insertText = item.insertText:match("^[%w_]+")
-			end
-		end
-	end
+	-- if new_items then
+	-- 	for _, item in pairs(new_items) do
+	-- 		local ft = semantics.get_ft()
+	-- 		if ft == "rust" then
+	-- 			item.textEdit.newText = item.textEdit.newText:match("^[%w_]+[!]?")
+	-- 		elseif ft == "lua" then
+	-- 			item.insertText = item.insertText:match("^[%w_]+")
+	-- 		end
+	-- 	end
+	-- end
 	log.trace("new items num: ", #new_items, " old items num: ", #items)
 	return new_items
 end
@@ -59,7 +59,9 @@ function private.request_src(ctx)
 			if incomplete then
 				incomplete = "builtin_lsp"
 			end
-			log.debug(items)
+			log.debug("---------------------------")
+			--log.debug(items)
+			log.debug("+++++++++++++++++++++++++++")
 			items = private.filter_items(ctx, items)
 			items = ncp_lsp.lsp_items2vim(ctx, items)
 			if not items or #items == 0 then

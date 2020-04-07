@@ -69,7 +69,8 @@ module.on_complete_done = function()
 	if type(complete_item) ~= "table" or vim.tbl_isempty(complete_item) then
 		return
 	end
-	ncp_lsp.apply_complete_user_data(complete_item.user_data)
+	--ncp_lsp.apply_complete_user_data(complete_item.user_data)
+	ncp_lsp.apply_user_data_edits_all(complete_item.user_data)
 end
 
 module.on_select_item = function()
@@ -78,7 +79,7 @@ module.on_select_item = function()
 		return
 	end
 	log.trace("on select item trigger apply user data")
-	ncp_lsp.apply_complete_user_data(complete_item.user_data)
+	ncp_lsp.apply_complete_user_edit_first(complete_item.user_data)
 end
 
 module.on_insert = function()

@@ -57,6 +57,7 @@ function context:new()
 	local ctx = {}
 	ctx.typed = api.nvim_get_current_line()
 	ctx.pos = vim.lsp.util.make_position_params()
+	ctx.pos.position.character = ctx.pos.position.character
 	setmetatable(ctx, {__index = self})
 	return ctx
 end
