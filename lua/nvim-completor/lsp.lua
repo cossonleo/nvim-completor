@@ -13,11 +13,9 @@ local log = require("nvim-completor/log")
 local api = vim.api
 
 local module = {}
-local private = {}
-
 
 -- lsp range pos: zero-base
-private.lsp_item2vim = function(ctx, complete_item)
+local function lsp2vim_item(ctx, complete_item)
     local abbr = complete_item.label
 	local word = ""
 
@@ -95,7 +93,7 @@ end
 module.lsp_items2vim = function(ctx, data)
 	local items = {}
 	for _, v in pairs(data) do
-		local item = private.lsp_item2vim(ctx, v)
+		local item = lsp2vim_item(ctx, v)
 		if item ~= nil then
 			table.insert(items, item)
 		end

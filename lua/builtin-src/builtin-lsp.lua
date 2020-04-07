@@ -17,7 +17,7 @@ function private.filter_items(ctx, items)
 	prefix = prefix:match("[%w_]+$")
 	if prefix and #prefix > 0 then
 		new_items = vim.tbl_filter(function(item)
-		  local word = item.insertText or item.label
+		  local word = item.filterText or item.insertText or item.label
 		  return vim.startswith(word, prefix)
 		end, items)
 	end
@@ -59,9 +59,9 @@ function private.request_src(ctx)
 			if incomplete then
 				incomplete = "builtin_lsp"
 			end
-			log.debug("---------------------------")
+			--log.debug("---------------------------")
 			--log.debug(items)
-			log.debug("+++++++++++++++++++++++++++")
+			--log.debug("+++++++++++++++++++++++++++")
 			items = private.filter_items(ctx, items)
 			items = ncp_lsp.lsp_items2vim(ctx, items)
 			if not items or #items == 0 then
