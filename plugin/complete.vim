@@ -13,6 +13,7 @@ let g:nvim_completor_load = 1
 
 lua ncp = require('nvim-completor')
 lua ncp.on_load()
+lua ncp.set_log_level(4)
 lua require("builtin-src")
 
 autocmd TextChangedP * lua ncp.on_text_changed_p()

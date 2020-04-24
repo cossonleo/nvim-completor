@@ -13,6 +13,8 @@ vim.fn
 
 v:lua.xxx
 
+luv
+
 nvim_get_current_buf()
 nvim_buf_set_option({buffer}, {name}, {value})
                     {buffer}  Buffer handle, or 0 for current buffer

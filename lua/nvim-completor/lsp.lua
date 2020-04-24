@@ -7,16 +7,17 @@
 --       Desc: lsp parse
 --------------------------------------------------
 
-local semantics = require("nvim-completor/semantics")
+-- local semantics = require("nvim-completor/semantics")
 local protocol = require('vim.lsp.protocol')
 local log = require("nvim-completor/log")
 local api = vim.api
+local vim = vim;
 
 local module = {}
 
 -- lsp range pos: zero-base
 local function lsp2vim_item(ctx, complete_item)
-    local abbr = complete_item.label
+    -- local abbr = complete_item.label
 	local word = ""
 
 	-- 组装user_data
@@ -25,6 +26,7 @@ local function lsp2vim_item(ctx, complete_item)
 		local apply_text = {}
 		apply_text.typed = ctx.typed
 		apply_text.line = ctx.pos.position.line
+		apply_text.col = ctx.pos.position.character
 		apply_text.edits = {complete_item.textEdit}
 		if complete_item.additionalTextEdits and #complete_item.additionalTextEdits > 0 then
 			vim.list_extend(apply_text.edits, complete_item.additionalTextEdits)
@@ -85,53 +87,120 @@ local edit_sort_key = sort_by_key(function(e)
   return {e.A[1], e.A[2], e.i}
 end)
 
-local function apply_first_line_edits(ctx_typed, text_edits, only_start_line)
+local function clean_str_snippet(str)
+	local pos = {}
+	repeat
+		local stop = false
+		local s, e = str:find("%$[0-9]+")
+		local ss, ee = str:find("%$%b{}")
+
+		if not s or (ss and ss < s) then
+			s = ss
+			e = ee
+		end
+
+		if s then
+			str = (str:sub(1, s - 1) or '') .. (str:sub(e+1) or '')
+			table.insert(pos, s - 1)
+		else
+			stop = true
+		end
+
+	until stop
+	log.debug("pos", pos)
+	if #pos ~= 0 then return {str = str, cols = pos} else return {str = str} end
+end
+
+-- 计算光标位置
+local function calc_cursor(e, cursor)
+	if e.B[1] < cursor[1] then
+		cursor[1] = cursor[1] + #e.lines - (e.B[1] - e.A[1] + 1)
+		return cursor
+	end
+
+	if e.B[1] == cursor[1] and e.B[2] <= cursor[2] then
+		if e.A[1] == e.B[1] and (#e.lines == 1) then
+			cursor[2] = cursor[2] + #e.lines[1] - (e.B[2] - e.A[2])
+			return cursor
+		end
+
+		cursor[1] = cursor[1] + #e.lines - (e.B[1] - e.A[1] + 1)
+		cursor[2] = cursor[2] + #e.lines[#e.lines] - e.B[2]
+	end
+
+	return cursor
+end
+
+local function apply_complete_edits(ctx, text_edits, only_ctx_line)
 	local bufnr = 0
+	local ctx_line = ctx[1]
+	local ctx_col = ctx[2]
+	local ctx_typed = ctx[3]
+	log.trace('apply_complete_edits', ctx)
+
 	if not next(text_edits) then return end
 	local start_line, finish_line = math.huge, -1
 	local cleaned = {}
+	local e1 = text_edits[1]
 	for i, e in ipairs(text_edits) do
-	  start_line = math.min(e.range.start.line, start_line)
-	  finish_line = math.max(e.range["end"].line, finish_line)
-	  -- TODO(ashkan) sanity check ranges for overlap.
-	  table.insert(cleaned, {
-	    i = i;
-	    A = {e.range.start.line; e.range.start.character};
-	    B = {e.range["end"].line; e.range["end"].character};
-	    lines = vim.split(e.newText, '\n', true);
-	  })
+		start_line = math.min(e.range.start.line, start_line)
+		finish_line = math.max(e.range["end"].line, finish_line)
+		-- TODO(ashkan) sanity check ranges for overlap.
+		table.insert(cleaned, {
+			i = i;
+			A = {e.range.start.line; e.range.start.character};
+			B = {e.range["end"].line; e.range["end"].character};
+			lines = {vim.split(e.newText, '\n', true)[1]};
+		})
 	end
-	
+
+	-- 计算出备用col
+	local spare_col = cleaned[1].A[2] + #cleaned[1].lines[1]
+
 	-- Reverse sort the orders so we can apply them without interfering with
 	-- eachother. Also add i as a sort key to mimic a stable sort.
 	table.sort(cleaned, edit_sort_key)
 	if not api.nvim_buf_is_loaded(bufnr) then
-	  vim.fn.bufload(bufnr)
+		vim.fn.bufload(bufnr)
 	end
-	
-	
+
 	local lines = api.nvim_buf_get_lines(bufnr, start_line, finish_line + 1, false)
-	lines[1] = ctx_typed
+	lines[ctx_line - start_line + 1] = ctx_typed
+
 	local fix_eol = api.nvim_buf_get_option(bufnr, 'fixeol')
 	local set_eol = fix_eol and api.nvim_buf_line_count(bufnr) <= finish_line + 1
 	if set_eol and #lines[#lines] ~= 0 then
 	  table.insert(lines, '')
 	end
-	
+
+	local ctx_cursor = {ctx_line, ctx_col}
 	for i = #cleaned, 1, -1 do
-	  local e = cleaned[i]
-	  local A = {e.A[1] - start_line, e.A[2]}
-	  local B = {e.B[1] - start_line, e.B[2]}
-	  lines = vim.lsp.util.set_lines(lines, A, B, e.lines)
+		local e = cleaned[i]
+
+		if e.i ~= 1 then
+			ctx_cursor = calc_cursor(e, ctx_cursor)
+		end
+
+		local A = {e.A[1] - start_line, e.A[2]}
+		local B = {e.B[1] - start_line, e.B[2]}
+		lines = vim.lsp.util.set_lines(lines, A, B, e.lines)
 	end
 	if set_eol and #lines[#lines] == 0 then
 	  table.remove(lines)
 	end
-	if only_start_line then
-		lines = {lines[1]}
+
+	local real_line = ctx_cursor[1]
+	local real_col = spare_col
+	local real_content = lines[real_line - start_line + 1]
+	log.debug("real content", real_content)
+	local ret = clean_str_snippet(real_content)
+	log.debug("ret", ret)
+	real_content = ret.str
+	if ret.cols then
+		real_col = ret.cols[1]
 	end
-	log.trace(lines)
-	api.nvim_buf_set_lines(bufnr, start_line, start_line + 1, false, lines)
+	api.nvim_buf_set_lines(bufnr, ctx_line, ctx_line + 1, false, {real_content})
+	vim.api.nvim_win_set_cursor(0, {ctx_line + 1, real_col})
 end
 
 module.lsp_items2vim = function(ctx, data)
@@ -156,13 +225,11 @@ module.apply_complete_user_edit = function(data, on_select)
 		return
 	end
 
-	local typed = user_data.typed
+	local ctx_typed = user_data.typed
 	local ctx_line = user_data.line
+	local ctx_col = user_data.col
 
-	apply_first_line_edits(typed, user_data.edits, on_select)
-	local newText = user_data.edits[1].newText
-	local start = user_data.edits[1].range.start.character
-	vim.api.nvim_win_set_cursor(0, {ctx_line + 1, start + #newText})
+	apply_complete_edits({ctx_line, ctx_col, ctx_typed}, user_data.edits, on_select)
 end
 
 return module

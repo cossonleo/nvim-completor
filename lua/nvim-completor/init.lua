@@ -47,6 +47,7 @@ module.on_text_changed_p = function()
 	if complete_info.pum_visible then
 		if complete_info.selected ~= -1 then
 			module.on_select_item()
+			module.last_selected = 1
 			log.trace("on select item")
 			return
 		elseif module.last_selected ~= -1 then
@@ -107,6 +108,10 @@ module.on_load = function()
 	log.set_level(4)
 	api.nvim_set_option('cot', "menuone,noselect,noinsert")
 	log.info("nvim completor loaded finish")
+end
+
+module.set_log_level = function(level)
+	log.set_level(level)
 end
 
 return module

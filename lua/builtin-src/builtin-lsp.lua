@@ -59,10 +59,9 @@ function private.request_src(ctx)
 			if incomplete then
 				incomplete = "builtin_lsp"
 			end
-			--log.debug("---------------------------")
-			--log.debug(items)
-			--log.debug("+++++++++++++++++++++++++++")
+			log.trace(items)
 			items = private.filter_items(ctx, items)
+			log.debug(items)
 			items = ncp_lsp.lsp_items2vim(ctx, items)
 			if not items or #items == 0 then
 				return
