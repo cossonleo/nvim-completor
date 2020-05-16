@@ -19,12 +19,13 @@ local ncp_lsp = require("nvim-completor/lsp")
 module.ctx = nil
 module.last_selected = -1
 
-function module.reset()
+local function reset()
 	module.ctx = nil
 	module.last_selected = -1
+	completor.reset()
 end
 
-function module.text_changed()
+local function text_changed()
 	local cur_ctx = context:new()
 	if module.ctx and vim.deep_equal(module.ctx, cur_ctx) then
 		log.trace("repeat trigger text changed")
@@ -38,7 +39,7 @@ end
 
 module.on_text_changed_i = function()
 	log.trace("text changed i")
-	module.text_changed()
+	text_changed()
 end
 
 module.on_text_changed_p = function()
@@ -61,7 +62,7 @@ module.on_text_changed_p = function()
 		end
 	end
 
-	module.text_changed()
+	text_changed()
 end
 
 module.on_complete_done = function()
@@ -87,14 +88,13 @@ module.on_insert = function()
 	log.trace("on insert")
 	local ft = api.nvim_buf_get_option(0, 'filetype')
 	semantics.set_ft(ft)
-	module.text_changed()
+	text_changed()
 end
 
 
-module.on_leave = function()
-	log.trace("on leave")
-	module.reset()
-	completor.reset()
+module.on_insert_leave = function()
+	log.trace("on insert leave")
+	reset()
 end
 
 module.on_buf_enter = function()

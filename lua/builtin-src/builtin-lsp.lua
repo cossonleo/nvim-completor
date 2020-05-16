@@ -49,7 +49,7 @@ function private.request_src(ctx)
         ctx.pos,
         function(err, _, result)
 			if err or not result then
-				log.debug("lsp complete err ", err)
+				log.warn("lsp complete err ", err)
 				return
 			end
 

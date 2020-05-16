@@ -19,6 +19,15 @@ local complete_engine = {
 	incomplete = nil,
 }
 
+-- 由于self.ctx 与 ctx的col可能不一样
+-- 则需要将新增item转换成当前ctx, 以达到显示正确
+local function add_items_offset(items, offset)
+	log.trace("convert items to self ctx")
+	for _, item in pairs(items) do
+		item.word = offset .. item.word
+	end
+end
+
 function complete_engine:reset()
 	self.ctx = nil
 	self.complete_items = nil
@@ -69,7 +78,7 @@ function complete_engine:add_complete_items(ctx, items, incomplete)
 
 	if offset then
 		log.trace("offset ctx on add items")
-		self:convert_items_to_self_ctx(items, offset)
+		add_items_offset(items, offset)
 	end
 
 	if incomplete then
@@ -94,7 +103,7 @@ function complete_engine:refresh_complete(ctx)
 	if offset then
 		matches = fuzzy.filter_completion_items(offset, self.complete_items)
 	elseif vim.deep_equal(cur_ctx, self.ctx) then
-		matches = self.complete_items or matches 
+		matches = self.complete_items or matches
 	else
 		log.trace("new ctx on refresh complete")
 		self:reset()
@@ -107,16 +116,6 @@ function complete_engine:refresh_complete(ctx)
 		vim.fn.complete(self.ctx.pos.position.character+1, matches)
 	end
 end
-
--- 由于self.ctx 与 ctx的col可能不一样
--- 则需要将新增item转换成当前ctx, 以达到显示正确
-function complete_engine:convert_items_to_self_ctx(items, offset)
-	log.trace("convert items to self ctx")
-	for _, item in pairs(items) do
-		item.word = offset .. item.word
-	end
-end
-
 
 return {
 	reset = function() complete_engine:reset() end,

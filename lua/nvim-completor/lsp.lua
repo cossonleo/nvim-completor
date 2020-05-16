@@ -10,6 +10,7 @@
 -- local semantics = require("nvim-completor/semantics")
 local protocol = require('vim.lsp.protocol')
 local log = require("nvim-completor/log")
+local snippet = require("nvim-completor/snippet")
 local api = vim.api
 local vim = vim;
 
@@ -87,29 +88,34 @@ local edit_sort_key = sort_by_key(function(e)
   return {e.A[1], e.A[2], e.i}
 end)
 
-local function clean_str_snippet(str)
-	local pos = {}
-	repeat
-		local stop = false
-		local s, e = str:find("%$[0-9]+")
-		local ss, ee = str:find("%$%b{}")
-
-		if not s or (ss and ss < s) then
-			s = ss
-			e = ee
-		end
-
-		if s then
-			str = (str:sub(1, s - 1) or '') .. (str:sub(e+1) or '')
-			table.insert(pos, s - 1)
-		else
-			stop = true
-		end
-
-	until stop
-	log.debug("pos", pos)
-	if #pos ~= 0 then return {str = str, cols = pos} else return {str = str} end
-end
+--local function clean_str_snippet(str)
+--	local pos = {}
+--	repeat
+--		local stop = false
+--		local s, e = str:find("%$[0-9]+")
+--		local ss, ee = str:find("%$%b{}")
+--
+--		if not s or (ss and ss < s) then
+--			s = ss
+--			e = ee
+--		end
+--
+--		if s then
+--			local sub = str:sub(s, e)
+--			if sub[2] == "{" then
+--				
+--			else
+--				str = (str:sub(1, s - 1) or '') .. (str:sub(e+1) or '')
+--				table.insert(pos, {col = s - 1, offset = 0})
+--			end
+--		else
+--			stop = true
+--		end
+--
+--	until stop
+--	log.debug("pos", pos)
+--	if #pos ~= 0 then return {str = str, cols = pos} else return {str = str} end
+--end
 
 -- 计算光标位置
 local function calc_cursor(e, cursor)
@@ -131,17 +137,16 @@ local function calc_cursor(e, cursor)
 	return cursor
 end
 
-local function apply_complete_edits(ctx, text_edits, only_ctx_line)
+local function apply_complete_edits(ctx, text_edits, on_select)
 	local bufnr = 0
 	local ctx_line = ctx[1]
 	local ctx_col = ctx[2]
 	local ctx_typed = ctx[3]
-	log.trace('apply_complete_edits', ctx)
+	log.trace('apply_complete_edits', ctx, text_edits)
 
 	if not next(text_edits) then return end
 	local start_line, finish_line = math.huge, -1
 	local cleaned = {}
-	local e1 = text_edits[1]
 	for i, e in ipairs(text_edits) do
 		start_line = math.min(e.range.start.line, start_line)
 		finish_line = math.max(e.range["end"].line, finish_line)
@@ -150,7 +155,7 @@ local function apply_complete_edits(ctx, text_edits, only_ctx_line)
 			i = i;
 			A = {e.range.start.line; e.range.start.character};
 			B = {e.range["end"].line; e.range["end"].character};
-			lines = {vim.split(e.newText, '\n', true)[1]};
+			lines = vim.split(e.newText, '\n', true);
 		})
 	end
 
@@ -191,16 +196,39 @@ local function apply_complete_edits(ctx, text_edits, only_ctx_line)
 
 	local real_line = ctx_cursor[1]
 	local real_col = spare_col
-	local real_content = lines[real_line - start_line + 1]
-	log.debug("real content", real_content)
-	local ret = clean_str_snippet(real_content)
-	log.debug("ret", ret)
-	real_content = ret.str
-	if ret.cols then
-		real_col = ret.cols[1]
+	local ctx_line_index = real_line - start_line + 1
+	if on_select then
+		local real_content = lines[ctx_line_index]
+		log.debug("real content", real_content)
+		local ret = snippet.replace_snippet(real_content)
+		log.debug("ret", ret)
+		real_content = ret.str
+		if ret.pos then
+			local p1 = ret.pos[1]
+			real_col = p1.col + p1.len
+		end
+		api.nvim_buf_set_lines(bufnr, ctx_line, ctx_line + 1, false, {real_content})
+		vim.api.nvim_win_set_cursor(0, {ctx_line + 1, real_col})
+	else
+		local place_cursor = {}
+		for i = ctx_line_index, #lines, 1 do
+			local ret = snippet.replace_snippet(lines[i])
+			log.debug("ret", ret)
+			lines[i] = ret.str
+			if ret.pos then
+				for c = 1, #ret.pos, 1 do
+					local pc = ret.pos[c]
+					table.insert(place_cursor, {start_line + i - 1, pc.col + pc.len})
+				end
+			end
+		end
+		api.nvim_buf_set_lines(bufnr, start_line, finish_line + 1, false, lines)
+		if #place_cursor > 0 then
+			vim.api.nvim_win_set_cursor(0, {place_cursor[1][1] + 1, place_cursor[1][2]})
+		else
+			vim.api.nvim_win_set_cursor(0, {ctx_line + 1, real_col})
+		end
 	end
-	api.nvim_buf_set_lines(bufnr, ctx_line, ctx_line + 1, false, {real_content})
-	vim.api.nvim_win_set_cursor(0, {ctx_line + 1, real_col})
 end
 
 module.lsp_items2vim = function(ctx, data)
