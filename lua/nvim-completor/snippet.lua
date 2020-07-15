@@ -4,64 +4,64 @@ local log = require("nvim-completor/log")
 local M = {}
 
 local function exract_placeholder(str)
-	local s = str:find(":")
+	local s, e = str:find("[0-9]+")
+	if s and s == 3 and e == #str - 1 then
+		return '$' .. str:sub(s, e)
+	end
+
+	s = str:find(":")
 	if not s then
 		return nil
 	end
-
-	local e = str:find(":", s + 1)
-	if not e then
-		e = #str
-	end
-	return str:sub(s+1, e-1)
+	return str:sub(s+1, #str-1)
 end
 
-local one_loop = function(str, offset, phs)
+local convert_step = function(str, offset)
 	local s = str:find("%$", offset)
 	if not s or s == #str then return end
-	local ret = {str = str, offset = offset, phs = phs}
 	local next_char = str:sub(s+1, s+1)
 	if next_char == "{" then
 		local ss, ee = str:find("%$%b{}", s)
-		if not ss then ret.offset = s + 2; return ret end
+		if not ss then return str, s + 2 end
 
 		local ph = exract_placeholder(str:sub(ss, ee))
-		--if not ph then return { offset = ee + 1, str = str, phs = phs } end
-		if not ph then ret.offset = ee + 1; return ret end
+		if not ph then return str, ee + 1 end
 
-		ret.str = (str:sub(1, ss - 1) or '') .. ph .. (str:sub(ee + 1) or '')
-		table.insert(ret.phs, {col = ss - 1, len = #ph})
-		ret.offset = ss + #rp
-		return ret
+		local fstr = (str:sub(1, ss - 1) or '') .. ph .. (str:sub(ee + 1) or '')
+		return fstr, ss + #ph, {col = ss - 1, len = #ph}
 	end
 
 	if '0' <= next_char and next_char <= '9' then
 		local ss, ee = str:find("%$[0-9]+", s)
-		table.insert(ret.phs, {col = ss - 1, len = ee - ss + 1})
-		ret.offset = ee + 1; return ret
+		return str, ee + 1, {col = ss - 1, len = ee - ss + 1}
 	end
 
-	ret.offset = s + 1; return ret
+	return str, s + 1
 end
 
-local iter = function(str)
-	return function(unuse, stat)
-		one_loop(stat.str, stat.offset, stat.phs)
-	end, true, {str = str, offset = 1, phs = {}}
-end
-
-M.new_replace_snippet = function(str)
+local convert_iter = function(str)
 	local phs = {}
+	local offset = 1
+	local fstr = str
+	return function()
+		fstr, offset, ph = convert_step(fstr, offset)
+		if not fstr then return end
+
+		if ph then table.insert(phs, ph) end
+		return fstr, phs
+	end
+end
+
+M.convert_to_str_item = function(str)
+	local final_phs = {}
 	local final_str = str
 
-	for stat in iter(str) do
-		final_str = stat.str
-		phs = stat.phs
+	for fstr, phs in convert_iter(str) do
+		final_str,final_phs = fstr, phs
 	end
 
-	local ret = {str = final_str}
-	if #phs > 0 then ret.pos = phs end
-	return ret
+	print(final_str, vim.fn.string(final_phs))
+	return {str = final_str, phs = final_phs}
 end
 
 M.replace_snippet = function(str)
