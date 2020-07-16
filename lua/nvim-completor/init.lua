@@ -15,6 +15,7 @@ local context = require('nvim-completor/context')
 local completor = require('nvim-completor/completor')
 local log = require('nvim-completor/log')
 local ncp_lsp = require("nvim-completor/lsp")
+local snippet = require("nvim-completor/snippet")
 
 module.ctx = nil
 module.last_selected = -1
@@ -112,6 +113,10 @@ end
 
 module.set_log_level = function(level)
 	log.set_level(level)
+end
+
+module.jump_to_next_pos = function()
+	snippet.jump_to_next_pos()
 end
 
 return module

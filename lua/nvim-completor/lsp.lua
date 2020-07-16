@@ -200,11 +200,11 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 	if on_select then
 		local real_content = lines[ctx_line_index]
 		log.debug("real content", real_content)
-		local ret = snippet.replace_snippet(real_content)
+		local ret = snippet.convert_to_str_item(real_content)
 		log.debug("ret", ret)
 		real_content = ret.str
-		if ret.pos then
-			local p1 = ret.pos[1]
+		if #ret.phs > 0 then
+			local p1 = ret.phs[1]
 			real_col = p1.col + p1.len
 		end
 		api.nvim_buf_set_lines(bufnr, ctx_line, ctx_line + 1, false, {real_content})
@@ -212,19 +212,18 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 	else
 		local place_cursor = {}
 		for i = ctx_line_index, #lines, 1 do
-			local ret = snippet.replace_snippet(lines[i])
+			local ret = snippet.convert_to_str_item(lines[i])
 			log.debug("ret", ret)
 			lines[i] = ret.str
-			if ret.pos then
-				for c = 1, #ret.pos, 1 do
-					local pc = ret.pos[c]
-					table.insert(place_cursor, {start_line + i - 1, pc.col + pc.len})
-				end
+			for _, ph in ipairs(ret.phs) do
+				table.insert(place_cursor, {start_line + i - 1, ph.col, ph.len})
 			end
 		end
 		api.nvim_buf_set_lines(bufnr, start_line, finish_line + 1, false, lines)
+		snippet.create_pos_extmarks(place_cursor)
 		if #place_cursor > 0 then
 			vim.api.nvim_win_set_cursor(0, {place_cursor[1][1] + 1, place_cursor[1][2]})
+			snippet.jump_to_next_pos({place_cursor[1][1], place_cursor[1][2] - 1})
 		else
 			vim.api.nvim_win_set_cursor(0, {ctx_line + 1, real_col})
 		end
