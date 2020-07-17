@@ -219,6 +219,7 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 				table.insert(place_cursor, {start_line + i - 1, ph.col, ph.len})
 			end
 		end
+
 		api.nvim_buf_set_lines(bufnr, start_line, finish_line + 1, false, lines)
 		snippet.create_pos_extmarks(place_cursor)
 		if #place_cursor > 0 then

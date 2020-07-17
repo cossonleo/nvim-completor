@@ -1,5 +1,5 @@
 
--- local log = require("nvim-completor/log")
+local log = require("nvim-completor/log")
 
 local M = {}
 local mark_ns = vim.api.nvim_create_namespace('nvim_completor')
@@ -11,8 +11,8 @@ local mark_map = {}
 local compare_mark = function(extmark1, extmark2)
 	local pos1 = vim.api.nvim_buf_get_extmark_by_id(0, mark_ns, extmark1[1])
 	local pos2 = vim.api.nvim_buf_get_extmark_by_id(0, mark_ns, extmark2[1])
-	if #pos2 then return true end
-	if #pos1 then return false end
+	if not pos2 or #pos2 == 0 then return true end
+	if not pos1 or #pos1 == 0 then return false end
 	if pos1[1] < pos2[1] then return true end
 	if pos1[1] > pos2[1] then return false end
 	if pos1[2] <= pos2[2] then return true end
@@ -80,8 +80,8 @@ M.convert_to_str_item = function(str)
 end
 
 M.create_pos_extmarks = function(phs)
-	local cur_id = vim.api.nvim_get_current_buf()
-	local marks = mark_map[cur_id] or {}
+	local buf_id = vim.api.nvim_get_current_buf()
+	local marks = mark_map[buf_id] or {}
 	for _, ph in ipairs(phs) do
 		local start_mark_id = vim.api.nvim_buf_set_extmark(0, mark_ns, 0, ph[1], ph[2], {})
 		local end_mark_id = vim.api.nvim_buf_set_extmark(0, mark_ns, 0, ph[1], ph[2] + ph[3], {})
@@ -90,41 +90,46 @@ M.create_pos_extmarks = function(phs)
 
 	-- sort
 	table.sort(marks, compare_mark)
-	mark_map[cur_id] = marks
+	mark_map[buf_id] = marks
 end
 
 M.jump_to_next_pos = function(pos)
-	local cur_id = vim.api.nvim_get_current_buf()
+	local buf_id = vim.api.nvim_get_current_buf()
 	local win_id = vim.api.nvim_get_current_win()
 	local cur_pos = pos or vim.api.nvim_win_get_cursor(win_id)
 	cur_pos[1] = cur_pos[1] - 1
 
-	local marks = mark_map[cur_id]
+	log.debug("marks:", mark_map)
+	local marks = mark_map[buf_id]
 	local del_marks = {}
 	for i, mark in ipairs(marks) do
 		local pos1 = vim.api.nvim_buf_get_extmark_by_id(0, mark_ns, mark[1])
 		local pos2 = vim.api.nvim_buf_get_extmark_by_id(0, mark_ns, mark[2])
+		log.debug(cur_pos, pos1, pos2)
 		if compare_pos(pos2, pos1) then
 			table.insert(del_marks, i)
-			vim.api.nvim_buf_del_extmark(cur_id, mark_ns, mark[1])
-			vim.api.nvim_buf_del_extmark(cur_id, mark_ns, mark[2])
+			vim.api.nvim_buf_del_extmark(buf_id, mark_ns, mark[1])
+			vim.api.nvim_buf_del_extmark(buf_id, mark_ns, mark[2])
 		elseif compare_pos(cur_pos, pos1) then
 			table.insert(del_marks, i)
-			vim.api.nvim_buf_del_extmark(cur_id, mark_ns, mark[1])
-			vim.api.nvim_buf_del_extmark(cur_id, mark_ns, mark[2])
+			vim.api.nvim_buf_del_extmark(buf_id, mark_ns, mark[1])
+			vim.api.nvim_buf_del_extmark(buf_id, mark_ns, mark[2])
 
-			local line_content = vim.api.nvim_buf_get_lines(cur_id, pos1[1], pos1[1] + 1, false)
-			print("....", line_content)
-			-- line_content = line_content:sub(1, pos1[1]) .. line_content:sub(pos[2] + 1)
-			-- vim.api.nvim_buf_set_lines(cur_id, pos1[1], pos[1] + 1, {line_content}, false)
-			-- vim.api.nvim_win_set_cursor(cur_id, {pos1[1] + 1, pos1[2]})
+			-- local line_content = vim.api.nvim_buf_get_lines(buf_id, pos1[1], pos1[1] + 1, false)
+			-- line_content = line_content[1]:sub(1, pos1[2]) .. line_content[1]:sub(pos2[2] + 1)
+			-- vim.api.nvim_buf_set_lines(buf_id, pos1[1], pos1[1] + 1, false, {line_content})
+			vim.api.nvim_win_set_cursor(win_id, {pos1[1] + 1, pos1[2]})
+			local len = pos2[2] - pos1[2]
+			vim.api.nvim_input("<c-o>v" .. len - 1 .. "l")
+			break
 		end
 	end
 
+	table.sort(del_marks, function(i1, i2) return i1 > i2 end)
 	for _, i in ipairs(del_marks) do
 		table.remove(marks, i)
 	end
-	mark_map[cur_id] = marks
+	mark_map[buf_id] = marks
 end
 
 return M

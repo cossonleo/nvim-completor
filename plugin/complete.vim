@@ -26,7 +26,7 @@ autocmd BufEnter * lua ncp.on_buf_enter()
 "inoremap <expr> <cr> (pumvisible() ? <C-R>=TComplete()<CR> : "\<CR>")
 inoremap <cr> <c-r>=CompleteDone()<CR>
 
-inoremap <c-j> <c-r>=v:lua.ncp.jump_to_next_pos()<cr>
+inoremap <m-j> <c-o>:lua ncp.jump_to_next_pos()<cr>
 
 func! CompleteDone()
 	if pumvisible()
@@ -36,5 +36,3 @@ func! CompleteDone()
 		return "\<cr>"
 	endif
 endfunc
-
-
