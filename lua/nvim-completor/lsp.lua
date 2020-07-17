@@ -223,8 +223,9 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 		api.nvim_buf_set_lines(bufnr, start_line, finish_line + 1, false, lines)
 		snippet.create_pos_extmarks(place_cursor)
 		if #place_cursor > 0 then
-			vim.api.nvim_win_set_cursor(0, {place_cursor[1][1] + 1, place_cursor[1][2]})
-			snippet.jump_to_next_pos({place_cursor[1][1], place_cursor[1][2] - 1})
+			-- vim.api.nvim_win_set_cursor(0, {place_cursor[1][1] + 1, place_cursor[1][2]})
+			--snippet.jump_to_next_pos({place_cursor[1][1], place_cursor[1][2] - 1})
+			snippet.jump_to_next_pos({ctx_cursor[1] + 1, ctx_cursor[2]})
 		else
 			vim.api.nvim_win_set_cursor(0, {ctx_line + 1, real_col})
 		end
