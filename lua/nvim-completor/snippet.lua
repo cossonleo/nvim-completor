@@ -114,11 +114,11 @@ M.jump_to_next_pos = function(pos)
 
 			local line_content = vim.api.nvim_buf_get_lines(buf_id, pos1[1], pos1[1] + 1, false)
 			local sub_content = line_content[1]:sub(pos1[2] + 1, pos2[2])
-			local ms = sub_content:match("^%$[0-9]+")
+			--local ms = sub_content:match("^%$[0-9]+")
 			vim.api.nvim_win_set_cursor(win_id, {pos1[1] + 1, pos1[2]})
 			local len = pos2[2] - pos1[2]
-			local cmd = "<c-o>v" .. len - 1 .. "l"
-			if ms and #ms == #sub_content then cmd = cmd .. "d" end
+			local cmd = "<c-o>v" .. len - 1 .. "ld"
+			-- if ms and #ms == #sub_content then cmd = cmd .. "d" end
 			vim.api.nvim_input(cmd)
 			break
 		end
