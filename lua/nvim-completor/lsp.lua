@@ -88,35 +88,6 @@ local edit_sort_key = sort_by_key(function(e)
   return {e.A[1], e.A[2], e.i}
 end)
 
---local function clean_str_snippet(str)
---	local pos = {}
---	repeat
---		local stop = false
---		local s, e = str:find("%$[0-9]+")
---		local ss, ee = str:find("%$%b{}")
---
---		if not s or (ss and ss < s) then
---			s = ss
---			e = ee
---		end
---
---		if s then
---			local sub = str:sub(s, e)
---			if sub[2] == "{" then
---				
---			else
---				str = (str:sub(1, s - 1) or '') .. (str:sub(e+1) or '')
---				table.insert(pos, {col = s - 1, offset = 0})
---			end
---		else
---			stop = true
---		end
---
---	until stop
---	log.debug("pos", pos)
---	if #pos ~= 0 then return {str = str, cols = pos} else return {str = str} end
---end
-
 -- 计算光标位置
 local function calc_cursor(e, cursor)
 	if e.B[1] < cursor[1] then
@@ -137,14 +108,30 @@ local function calc_cursor(e, cursor)
 	return cursor
 end
 
+local function apply_edit_on_select(ctx, text_edit)
+end
+
 local function apply_complete_edits(ctx, text_edits, on_select)
 	local bufnr = 0
 	local ctx_line = ctx[1]
 	local ctx_col = ctx[2]
 	local ctx_typed = ctx[3]
 	log.trace('apply_complete_edits', ctx, text_edits)
-
 	if not next(text_edits) then return end
+
+	if on_select then
+		local e = text_edits[1]
+		local head = e.range.start.character
+		local tail = e.range['end'].character
+		local new_text = vim.split(e.newText, '\n', true)[1]
+		new_text = snippet.convert_to_str_item(new_text).str
+		local new_col = head + #new_text
+		new_text = (ctx_typed:sub(1, head) or '') .. new_text .. (ctx_typed:sub(tail + 1) or '')
+		api.nvim_buf_set_lines(bufnr, ctx_line, ctx_line + 1, false, {new_text})
+		vim.api.nvim_win_set_cursor(0, {ctx_line + 1, new_col})
+		return
+	end
+
 	local start_line, finish_line = math.huge, -1
 	local cleaned = {}
 	for i, e in ipairs(text_edits) do
@@ -197,38 +184,22 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 	local real_line = ctx_cursor[1]
 	local real_col = spare_col
 	local ctx_line_index = real_line - start_line + 1
-	if on_select then
-		local real_content = lines[ctx_line_index]
-		log.debug("real content", real_content)
-		local ret = snippet.convert_to_str_item(real_content)
+	local place_cursor = {}
+	for i = ctx_line_index, #lines, 1 do
+		local ret = snippet.convert_to_str_item(lines[i])
 		log.debug("ret", ret)
-		real_content = ret.str
-		if #ret.phs > 0 then
-			local p1 = ret.phs[1]
-			real_col = p1.col + p1.len
+		lines[i] = ret.str
+		for _, ph in ipairs(ret.phs) do
+			table.insert(place_cursor, {start_line + i - 1, ph.col, ph.len})
 		end
-		api.nvim_buf_set_lines(bufnr, ctx_line, ctx_line + 1, false, {real_content})
-		vim.api.nvim_win_set_cursor(0, {ctx_line + 1, real_col})
-	else
-		local place_cursor = {}
-		for i = ctx_line_index, #lines, 1 do
-			local ret = snippet.convert_to_str_item(lines[i])
-			log.debug("ret", ret)
-			lines[i] = ret.str
-			for _, ph in ipairs(ret.phs) do
-				table.insert(place_cursor, {start_line + i - 1, ph.col, ph.len})
-			end
-		end
+	end
 
-		api.nvim_buf_set_lines(bufnr, start_line, finish_line + 1, false, lines)
-		snippet.create_pos_extmarks(place_cursor)
-		if #place_cursor > 0 then
-			-- vim.api.nvim_win_set_cursor(0, {place_cursor[1][1] + 1, place_cursor[1][2]})
-			--snippet.jump_to_next_pos({place_cursor[1][1], place_cursor[1][2] - 1})
-			snippet.jump_to_next_pos({ctx_cursor[1] + 1, ctx_cursor[2]})
-		else
-			vim.api.nvim_win_set_cursor(0, {ctx_line + 1, real_col})
-		end
+	api.nvim_buf_set_lines(bufnr, start_line, finish_line + 1, false, lines)
+	snippet.create_pos_extmarks(place_cursor)
+	if #place_cursor > 0 then
+		snippet.jump_to_next_pos({ctx_cursor[1] + 1, ctx_cursor[2]})
+	else
+		vim.api.nvim_win_set_cursor(0, {ctx_line + 1, real_col})
 	end
 end
 
