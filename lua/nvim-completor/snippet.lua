@@ -1,6 +1,10 @@
 
 local log = require("nvim-completor/log")
 
+-----
+-- TODO 封装1-based api 到 0-based api
+-----
+
 local M = {}
 local mark_ns = vim.api.nvim_create_namespace('nvim_completor')
 
@@ -89,15 +93,6 @@ M.create_pos_extmarks = function(phs)
 		table.insert(marks, {start_mark_id, end_mark_id})
 	end
 
-	-- sort
-	-- local pos_debug = {}
-	-- for _, p in ipairs(marks) do
-	-- 	local A = vim.api.nvim_buf_get_extmark_by_id(0, mark_ns, p[1])
-	-- 	local B = vim.api.nvim_buf_get_extmark_by_id(0, mark_ns, p[2])
-	-- 	table.insert(pos_debug, {A, B})
-	-- end
-	-- log.debug("marks: ", vim.fn.string(pos_debug))
-	-- table.sort(marks, mark_less)
 	mark_map[buf_id] = marks
 	log.debug("marks: ", vim.fn.string(marks))
 end
@@ -119,15 +114,13 @@ M.jump_to_next_pos = function(pos)
 		log.debug(cur_pos, pos1, pos2)
 		if pos_relation(pos1, pos2) ~= -1 then
 			table.insert(del_marks, i)
-			vim.api.nvim_buf_del_extmark(buf_id, mark_ns, mark[1])
-			vim.api.nvim_buf_del_extmark(buf_id, mark_ns, mark[2])
+			del_marks(mark)
 			return
 		end
 
 		if pos_relation(cur_pos, pos2) ~= -1 then
 			table.insert(del_marks, i)
-			vim.api.nvim_buf_del_extmark(buf_id, mark_ns, mark[1])
-			vim.api.nvim_buf_del_extmark(buf_id, mark_ns, mark[2])
+			del_marks(mark)
 			return
 		end
 
@@ -152,12 +145,50 @@ M.jump_to_next_pos = function(pos)
 
 	if next_pos == nil then return end
 	local pos1 ,pos2 = next_pos.pos1, next_pos.pos2
-	vim.api.nvim_buf_del_extmark(buf_id, mark_ns, next_pos.m1)
-	vim.api.nvim_buf_del_extmark(buf_id, mark_ns, next_pos.m2)
+	del_marks({next_pos.m1, next_pos.m2})
 	vim.api.nvim_win_set_cursor(win_id, {pos1[1] + 1, pos1[2]})
 	local len = pos2[2] - pos1[2]
 	local cmd = "<c-o>v" .. len - 1 .. "ld"
 	vim.api.nvim_input(cmd)
+end
+
+-- edit: { new_text = {line1, line2}, head = { line, col } , tail = {line, col} }
+local apply_edit = function(ctx, edit)
+	
+end
+
+-- edit: { new_text = {line1, line2}, head = { line, col } , tail = {line, col} }
+-- eidts: {edit}
+M.apply_edits = function(ctx, edits)
+	table.sort(edits, function(e1, e2)
+		if e1.head[1] > e2.head[1] then return true end
+		if e1.head[1] < e2.head[1] then return false end
+		if e1.head[2] > e2.head[2] then return true end
+		if e1.head[2] < e2.head[2] then return false end
+		return true
+	end)
+
+	for _, e in ipairs(edits) do
+	end
+end
+
+M.get_curline_marks = function(line)
+	local buf = vim.api.nvim_get_current_buf()
+	local marks = mark_map[buf]
+	if marks == nil then return {} end
+
+	-- {{ mark_id = xx, col = xx }}
+	local cur_marks = {}
+	for _, mark in ipairs(marks) do
+		local pos1 = vim.api.nvim_buf_get_extmark_by_id(0, mark_ns, mark[1])
+		local pos2 = vim.api.nvim_buf_get_extmark_by_id(0, mark_ns, mark[2])
+		if pos1[1] == line then
+			table.insert(cur_marks, {mark_id = mark[1], col = pos1[2]})
+			table.insert(cur_marks, {mark_id = mark[2], col = pos2[2]})
+		end
+	end
+
+	return cur_marks
 end
 
 return M
