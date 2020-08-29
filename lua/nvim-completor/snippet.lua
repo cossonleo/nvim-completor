@@ -82,7 +82,7 @@ end
 M.jump_to_next_pos = function(pos)
 	local buf_id = api.cur_buf()
 	local win_id = api.cur_win()
-	local cur_pos = pos or api.get_cursor()
+	local cur_pos = pos or api.pos()
 
 	log.debug("marks:", mark_map)
 	local marks = mark_map[buf_id]

@@ -9,12 +9,14 @@
 
 local semantics = require("nvim-completor/semantics")
 local snippet = require("nvim-completor/snippet")
-local api = vim.api
+local api = require("nvim-completor/api")
 
 -- position_param = {}
 local context = {
+	buf = 0,
 	pos = {},
 	typed = "",
+	marks = {},
 }
 
 -- self > ctx
@@ -24,20 +26,20 @@ function context:offset_typed(ctx)
 	if not (self and ctx) then
 		return nil
 	end
-	if self.pos.textDocument.uri ~= ctx.pos.textDocument.uri then
+	if self.buf == 0  or self.buf ~= ctx.buf then
 		return nil
 	end
-	if self.pos.position.line ~= ctx.pos.position.line then
+	if self.pos[1] ~= ctx.pos[1] then
 		return nil
 	end
-	if ctx.pos.position.character >= self.pos.position.character then
+	if ctx.pos[2] >= self.pos[2] then
 		return nil
 	end
 	local front_typed = ctx:typed_to_cursor()
 	if not vim.startswith(self.typed, front_typed) then
 		return nil
 	end
-	local offset_typed = self.typed:sub(ctx.pos.position.character + 1, self.pos.position.character)
+	local offset_typed = self.typed:sub(ctx.pos[2] + 1, self.pos[2])
 	local check = offset_typed:match('[%w_]+')
 	if check and offset_typed == check then
 		return check
@@ -46,19 +48,20 @@ function context:offset_typed(ctx)
 end
 
 function context:typed_to_cursor()
-	return self.typed:sub(1, self.pos.position.character)
+	return self.typed:sub(1, self.pos[2])
 end
 
 function context:can_fire_complete()
-	local typed = self.typed:sub(1, self.pos.position.character)
+	local typed = self.typed:sub(1, self.pos[2])
 	return semantics.is_fire_complete(typed)
 end
 
 function context:new()
 	local ctx = {}
-	ctx.typed = api.nvim_get_current_line()
-	ctx.pos = vim.lsp.util.make_position_params()
-	ctx.marks = snippet.get_curline_marks(ctx.pos.position.line)
+	ctx.buf = api.cur_buf()
+	ctx.typed = api.cur_line()
+	ctx.pos = api.cur_pos()
+	ctx.marks = snippet.get_curline_marks(ctx.pos[1])
 	setmetatable(ctx, {__index = self})
 	return ctx
 end

@@ -4,7 +4,11 @@ local M = {}
 
 local vapi = vim.api
 
-local mark_ns = vim.api.nvim_create_namespace('nvim_completor')
+local mark_ns = vapi.nvim_create_namespace('nvim_completor')
+
+M.cur_mode = function()
+	return vapi.nvim_get_mode().mode
+end
 
 M.cur_buf = function()
 	return vapi.nvim_get_current_buf()
@@ -14,10 +18,21 @@ M.cur_win = function()
 	return vapi.nvim_get_current_win()
 end
 
-M.get_cursor = function()
-	local cursor = vapi.nvim_win_get_cursor(0)
-	cursor[1] = cursor[1] - 1
-	return cursor
+M.cur_line = function()
+	return vapi.nvim_get_current_line()
+end
+
+M.get_line = function(line)
+	return vim.fn.getline(line + 1)
+end
+
+-- 你啊
+M.cur_pos = function()
+	local row, col = unpack(vapi.nvim_win_get_cursor(0))
+	row = row - 1
+--	local line = vapi.nvim_buf_get_lines(0, row, row+1, true)[1]
+--	col = vim.str_utfindex(line, col)
+	return {row, col}
 end
 
 M.set_cursor = function(pos)
@@ -48,9 +63,12 @@ M.del_marks = function(marks)
 	if marks == nil then return end
 	local buf_id = M.cur_buf()
 	for _, mark in ipairs(marks) do
-		vim.api.nvim_buf_del_extmark(buf_id, mark_ns, mark)
+		vapi.nvim_buf_del_extmark(buf_id, mark_ns, mark)
 	end
 end
 
+M.complete = function(pos, items)
+	vim.fn.complete(pos[2] + 1, items)
+end
 
 return M

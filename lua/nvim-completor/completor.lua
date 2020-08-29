@@ -12,6 +12,7 @@ local lsp = require("nvim-completor/lsp")
 local context = require("nvim-completor/context")
 local fuzzy = require("nvim-completor/fuzzy-match")
 local log = require("nvim-completor/log")
+local api = require("nvim-completor/api")
 
 local complete_engine = {
 	ctx = nil,
@@ -110,10 +111,10 @@ function complete_engine:refresh_complete(ctx)
 		return
 	end
 
-	local mode = vim.api.nvim_get_mode().mode
+	local mode = api.cur_mode()
 	if #matches > 0 and (mode == "i" or mode == "ic" or mode == "ix") then
 		log.trace("trigger vim fn complete")
-		vim.fn.complete(self.ctx.pos.position.character+1, matches)
+		api.complete(self.ctx.pos, matches)
 	end
 end
 

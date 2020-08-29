@@ -1,10 +1,10 @@
 --------------------------------------------------
---    LICENSE: MIT
---     Author: Cosson2017
---    Version: 0.3
+--		LICENSE: MIT
+--		 Author: Cosson2017
+--		Version: 0.3
 -- CreateTime: 2019-03-07 13:35:53
 -- LastUpdate: 2019-03-07 13:35:53
---       Desc: lsp parse
+--			 Desc: lsp parse
 --------------------------------------------------
 
 -- local semantics = require("nvim-completor/semantics")
@@ -15,9 +15,29 @@ local api = require("nvim-completor/api")
 
 local module = {}
 
+local function fix_edits_col(ctx, edits)
+	local new_edits = {}
+
+	local fix = function(pos)
+		local line = ctx.typed
+		if pos.line ~= ctx.pos[1] then
+			line = api.get_line(pos.line)
+		end
+		pos.character = vim.str_byteindex(line, pos.character)
+		return pos
+	end
+
+	for _, e in ipairs(edits) do
+		e.range.start = fix(e.range.start)
+		e.range["end"] = fix(e.range["end"])
+		table.insert(new_edits, e)
+	end
+	return new_edits
+end
+
 -- lsp range pos: zero-base
 local function lsp2vim_item(ctx, complete_item)
-    -- local abbr = complete_item.label
+		-- local abbr = complete_item.label
 	local word = ""
 
 	-- 组装user_data
@@ -25,12 +45,12 @@ local function lsp2vim_item(ctx, complete_item)
 	if complete_item.textEdit and complete_item.textEdit.newText then
 		local apply_text = {}
 		apply_text.typed = ctx.typed
-		apply_text.line = ctx.pos.position.line
-		apply_text.col = ctx.pos.position.character
-		apply_text.edits = {complete_item.textEdit}
+		apply_text.pos = ctx.pos
+		local raw_edits = {complete_item.textEdit}
 		if complete_item.additionalTextEdits and #complete_item.additionalTextEdits > 0 then
-			vim.list_extend(apply_text.edits, complete_item.additionalTextEdits)
+			vim.list_extend(raw_edits, complete_item.additionalTextEdits)
 		end
+		apply_text.edits = fix_edits_col(ctx, raw_edits)
 		user_data = apply_text
 		word = complete_item.textEdit and complete_item.textEdit.newText
 	else
@@ -45,76 +65,95 @@ local function lsp2vim_item(ctx, complete_item)
 	--	word = complete_item.insertText
 	end
 
-    local info = ' '
-    local documentation = complete_item.documentation
-    if documentation then
-      if type(documentation) == 'string' and documentation ~= '' then
-        info = documentation
-      elseif type(documentation) == 'table' and type(documentation.value) == 'string' then
-        info = documentation.value
-      end
-    end
+	local info = ' '
+	local documentation = complete_item.documentation
+	if documentation then
+		if type(documentation) == 'string' and documentation ~= '' then
+			info = documentation
+		elseif type(documentation) == 'table' and type(documentation.value) == 'string' then
+			info = documentation.value
+		end
+	end
 
-    return {
-      word = word,
-      abbr = complete_item.label,
-      kind = protocol.CompletionItemKind[complete_item.kind] or '',
-      menu = complete_item.detail or '',
-      info = info,
-      icase = 1,
-      dup = 1,
-      empty = 1,
-	  user_data = vim.fn.json_encode(user_data),
-    }
-
+	return {
+		word = word,
+		abbr = complete_item.label,
+		kind = protocol.CompletionItemKind[complete_item.kind] or '',
+		menu = complete_item.detail or '',
+		info = info,
+		icase = 1,
+		dup = 1,
+		empty = 1,
+		user_data = vim.fn.json_encode(user_data),
+	}
 end
 
 local function sort_by_key(fn)
-  return function(a,b)
-    local ka, kb = fn(a), fn(b)
-    assert(#ka == #kb)
-    for i = 1, #ka do
-      if ka[i] ~= kb[i] then
-        return ka[i] < kb[i]
-      end
-    end
-    -- every value must have been equal here, which means it's not less than.
-    return false
-  end
+	return function(a,b)
+		local ka, kb = fn(a), fn(b)
+		assert(#ka == #kb)
+		for i = 1, #ka do
+			if ka[i] ~= kb[i] then
+				return ka[i] < kb[i]
+			end
+		end
+		-- every value must have been equal here, which means it's not less than.
+		return false
+	end
 end
 
 local edit_sort_key = sort_by_key(function(e)
-  return {e.A[1], e.A[2], e.i}
+	return {e.A[1], e.A[2], e.i}
 end)
 
 -- 计算光标位置
 local function calc_cursor(e, cursor)
-	if e.B[1] < cursor[1] then
-		cursor[1] = cursor[1] + #e.lines - (e.B[1] - e.A[1] + 1)
+--	if e.B[1] < cursor[1] then
+--		cursor[1] = cursor[1] + #e.lines - (e.B[1] - e.A[1] + 1)
+--		return cursor
+--	end
+--
+--	if e.B[1] == cursor[1] and e.B[2] <= cursor[2] then
+--		if e.A[1] == e.B[1] and (#e.lines == 1) then
+--			cursor[2] = cursor[2] + #e.lines[1] - (e.B[2] - e.A[2])
+--			return cursor
+--		end
+--
+--		cursor[1] = cursor[1] + #e.lines - (e.B[1] - e.A[1] + 1)
+--		cursor[2] = cursor[2] + #e.lines[#e.lines] - e.B[2]
+--	end
+
+	-- 不可能出现 B[1] = curosr[1] + 1 and B[2] == 0 情况
+	if e.B[1] > cursor[1] then return cursor end
+
+	local fix = 0
+	if e.B[2] > 0 then fix = 1 end
+
+	if (e.B[1] < cursor[1]) then
+		cursor[1] = cursor[1] + #e.lines - (e.B[1] - e.A[1] + fix)
 		return cursor
 	end
 
-	if e.B[1] == cursor[1] and e.B[2] <= cursor[2] then
-		if e.A[1] == e.B[1] and (#e.lines == 1) then
-			cursor[2] = cursor[2] + #e.lines[1] - (e.B[2] - e.A[2])
-			return cursor
-		end
-
-		cursor[1] = cursor[1] + #e.lines - (e.B[1] - e.A[1] + 1)
-		cursor[2] = cursor[2] + #e.lines[#e.lines] - e.B[2]
+	if e.B[2] == 0 then
+		cursor[1] = cursor[1] + #e.lines - (e.B[1] - e.A[1])
+		return cursor
 	end
+	if e.B[2] >= cursor[2] then return cursor end
+
+	cursor[1] = cursor[1] + #e.lines - (e.B[1] - e.A[1] + 1)
+	cursor[2] = cursor[2] + #e.lines[#e.lines] - e.B[2]
 
 	return cursor
 end
 
-local function apply_edit_on_select(ctx, text_edit)
-end
-
-local function apply_complete_edits(ctx, text_edits, on_select)
+local function apply_complete_edits(ctx, on_select)
 	local bufnr = 0
-	local ctx_line = ctx[1]
-	local ctx_col = ctx[2]
-	local ctx_typed = ctx[3]
+	local ctx_line = ctx.pos[1]
+	local ctx_col = ctx.pos[2]
+	local ctx_typed = ctx.typed
+	local text_edits = ctx.edits
+	local ctx_marks = ctx.marks
+
 	log.trace('apply_complete_edits', ctx, text_edits)
 	if not next(text_edits) then return end
 
@@ -146,7 +185,15 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 	end
 
 	-- 计算出备用col
-	local spare_col = cleaned[1].A[2] + #cleaned[1].lines[1]
+	local ctx_cursor = {ctx_line, ctx_col}
+	local cn1 = cleaned[1]
+	ctx_cursor[1] = ctx_line + #cn1.lines -  (cn1.B[1] - cn1.A[1] + 1)
+	local llen = #cn1.lines
+	if llen > 1 then
+		ctx_cursor[2] = #cn1.lines[llen]
+	else
+		ctx_cursor[2] = cn1.A[2] + #cn1.lines[1]
+	end
 
 	-- Reverse sort the orders so we can apply them without interfering with
 	-- eachother. Also add i as a sort key to mimic a stable sort.
@@ -161,10 +208,9 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 	local fix_eol = vim.api.nvim_buf_get_option(bufnr, 'fixeol')
 	local set_eol = fix_eol and vim.api.nvim_buf_line_count(bufnr) <= finish_line + 1
 	if set_eol and #lines[#lines] ~= 0 then
-	  table.insert(lines, '')
+		table.insert(lines, '')
 	end
 
-	local ctx_cursor = {ctx_line, ctx_col}
 	for i = #cleaned, 1, -1 do
 		local e = cleaned[i]
 
@@ -177,12 +223,10 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 		lines = vim.lsp.util.set_lines(lines, A, B, e.lines)
 	end
 	if set_eol and #lines[#lines] == 0 then
-	  table.remove(lines)
+		table.remove(lines)
 	end
 
-	local real_line = ctx_cursor[1]
-	local real_col = spare_col
-	local ctx_line_index = real_line - start_line + 1
+	local ctx_line_index = ctx_line - start_line + 1
 	local place_cursor = {}
 	for i = ctx_line_index, #lines, 1 do
 		local ret = snippet.convert_to_str_item(lines[i])
@@ -196,9 +240,9 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 	vim.api.nvim_buf_set_lines(bufnr, start_line, finish_line + 1, false, lines)
 	snippet.create_pos_extmarks(place_cursor)
 	if #place_cursor > 0 then
-		snippet.jump_to_next_pos(ctx_cursor)
+		snippet.jump_to_next_pos{ctx_cursor[1], 0}
 	else
-		api.set_cursor({ctx_line, real_col})
+		api.set_cursor(ctx_cursor)
 	end
 end
 
@@ -223,12 +267,7 @@ module.apply_complete_user_edit = function(data, on_select)
 	if type(user_data) ~= "table" or vim.tbl_isempty(user_data) then
 		return
 	end
-
-	local ctx_typed = user_data.typed
-	local ctx_line = user_data.line
-	local ctx_col = user_data.col
-
-	apply_complete_edits({ctx_line, ctx_col, ctx_typed}, user_data.edits, on_select)
+	apply_complete_edits(user_data, on_select)
 end
 
 return module

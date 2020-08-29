@@ -55,7 +55,7 @@ module.on_text_changed_p = function()
 		elseif module.last_selected ~= -1 then
 			log.debug("select top")
 			local bno = vim.api.nvim_get_current_buf()
-			local line = module.ctx.pos.position.line
+			local line = module.ctx.pos[1]
 			local content = module.ctx.typed
 			vim.api.nvim_buf_set_lines(bno, line, line + 1, false, {content})
 			log.trace("on select item with not selected")

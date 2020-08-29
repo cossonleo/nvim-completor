@@ -32,10 +32,18 @@ function private.request_src(ctx)
 	end
 	local bufno = vim.api.nvim_get_current_buf()
 	log.trace("builtin_lsp complete request")
+	params = {
+		textDocument = { uri = vim.uri_from_bufnr(0) },
+		position = {
+			line = ctx.pos[1]; 
+			character = vim.str_utfindex(ctx.typed, ctx.pos[2]); 
+			-- character = ctx.pos[2]; 
+		}
+	}
 	vim.lsp.buf_request(
         bufno,
         'textDocument/completion',
-        ctx.pos,
+        params,
         function(err, _, result)
 			if err or not result then
 				log.warn("lsp complete err ", err)
