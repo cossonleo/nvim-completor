@@ -8,6 +8,7 @@
 --------------------------------------------------
 
 local semantics = require("nvim-completor/semantics")
+local snippet = require("nvim-completor/snippet")
 local api = vim.api
 
 -- position_param = {}

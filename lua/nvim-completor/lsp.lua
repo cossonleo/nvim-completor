@@ -11,8 +11,7 @@
 local protocol = require('vim.lsp.protocol')
 local log = require("nvim-completor/log")
 local snippet = require("nvim-completor/snippet")
-local api = vim.api
-local vim = vim;
+local api = require("nvim-completor/api")
 
 local module = {}
 
@@ -127,8 +126,8 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 		new_text = snippet.convert_to_str_item(new_text).str
 		local new_col = head + #new_text
 		new_text = (ctx_typed:sub(1, head) or '') .. new_text .. (ctx_typed:sub(tail + 1) or '')
-		api.nvim_buf_set_lines(bufnr, ctx_line, ctx_line + 1, false, {new_text})
-		vim.api.nvim_win_set_cursor(0, {ctx_line + 1, new_col})
+		vim.api.nvim_buf_set_lines(bufnr, ctx_line, ctx_line + 1, false, {new_text})
+		api.set_cursor({ctx_line, new_col})
 		return
 	end
 
@@ -152,15 +151,15 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 	-- Reverse sort the orders so we can apply them without interfering with
 	-- eachother. Also add i as a sort key to mimic a stable sort.
 	table.sort(cleaned, edit_sort_key)
-	if not api.nvim_buf_is_loaded(bufnr) then
+	if not vim.api.nvim_buf_is_loaded(bufnr) then
 		vim.fn.bufload(bufnr)
 	end
 
-	local lines = api.nvim_buf_get_lines(bufnr, start_line, finish_line + 1, false)
+	local lines = vim.api.nvim_buf_get_lines(bufnr, start_line, finish_line + 1, false)
 	lines[ctx_line - start_line + 1] = ctx_typed
 
-	local fix_eol = api.nvim_buf_get_option(bufnr, 'fixeol')
-	local set_eol = fix_eol and api.nvim_buf_line_count(bufnr) <= finish_line + 1
+	local fix_eol = vim.api.nvim_buf_get_option(bufnr, 'fixeol')
+	local set_eol = fix_eol and vim.api.nvim_buf_line_count(bufnr) <= finish_line + 1
 	if set_eol and #lines[#lines] ~= 0 then
 	  table.insert(lines, '')
 	end
@@ -194,12 +193,12 @@ local function apply_complete_edits(ctx, text_edits, on_select)
 		end
 	end
 
-	api.nvim_buf_set_lines(bufnr, start_line, finish_line + 1, false, lines)
+	vim.api.nvim_buf_set_lines(bufnr, start_line, finish_line + 1, false, lines)
 	snippet.create_pos_extmarks(place_cursor)
 	if #place_cursor > 0 then
-		snippet.jump_to_next_pos({ctx_cursor[1] + 1, ctx_cursor[2]})
+		snippet.jump_to_next_pos(ctx_cursor)
 	else
-		vim.api.nvim_win_set_cursor(0, {ctx_line + 1, real_col})
+		api.set_cursor({ctx_line, real_col})
 	end
 end
 
