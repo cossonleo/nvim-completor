@@ -3,6 +3,7 @@
 local M = {}
 
 local vapi = vim.api
+local log = require'nvim-completor/log'
 
 local mark_ns = vapi.nvim_create_namespace('nvim_completor')
 
@@ -69,6 +70,10 @@ end
 
 M.complete = function(pos, items)
 	vim.fn.complete(pos[2] + 1, items)
+end
+
+M.set_lines = function(head, tail, lines)
+	vim.api.nvim_buf_set_lines(0, head, tail, false, lines)
 end
 
 return M

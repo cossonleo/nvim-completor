@@ -82,7 +82,7 @@ end
 M.jump_to_next_pos = function(pos)
 	local buf_id = api.cur_buf()
 	local win_id = api.cur_win()
-	local cur_pos = pos or api.pos()
+	local cur_pos = pos or api.cur_pos()
 
 	log.debug("marks:", mark_map)
 	local marks = mark_map[buf_id]
@@ -134,23 +134,87 @@ M.jump_to_next_pos = function(pos)
 end
 
 -- edit: { new_text = {line1, line2}, head = { line, col } , tail = {line, col} }
-local apply_edit = function(ctx, edit)
-	
-end
+M.apply_edit = function(edit, create_mark)
+	local cur_buf = api.cur_buf()
+	local marks = mark_map[cur_buf]
+	local need_marks = {}
 
--- edit: { new_text = {line1, line2}, head = { line, col } , tail = {line, col} }
--- eidts: {edit}
-M.apply_edits = function(ctx, edits)
-	table.sort(edits, function(e1, e2)
-		if e1.head[1] > e2.head[1] then return true end
-		if e1.head[1] < e2.head[1] then return false end
-		if e1.head[2] > e2.head[2] then return true end
-		if e1.head[2] < e2.head[2] then return false end
-		return true
-	end)
+	-- 起止行号
+	local start = edit.head[1]
+	local tail = edit.tail[1]
+	-- 当前操作行
+	local temp = api.get_line(start)
+	edit.new_text[1] = temp:sub(1, edit.head[2]) .. edit.new_text[1]
 
-	for _, e in ipairs(edits) do
+	local tlen = #edit.new_text
+	local cursor_col = edit.head[2]
+	if tlen > 0 then cursor_col = #edit.new_text[tlen] end
+	if edit.tail[2] > 0 then
+		if edit.head[1] ~= edit.tail[1] then temp = api.get_line(start) end
+		if tlen > 0 then
+			edit.new_text[tlen] = edit.new_text[tlen] .. temp:sub(edit.tail[2] + 1)	
+		end
+		tail = tail + 1
 	end
+
+	local check = function(mark)
+		local mpos1 = api.get_extmark(mark[1])
+		if #mpos1 == 0 then return end
+		local mpos2 = api.get_extmark(mark[2])
+		if #mpos2 == 0 then return end
+		if mpos2[2] == 0 then return end
+
+		if mpos2[1] == edit.head[1] then
+			if api.pos_relation(mpos2, edit.head) ~= 1 then
+				table.insert(need_marks, {mark[1], mpos1[1], mpos1[2]})
+				table.insert(need_marks, {mark[2], mpos2[1], mpos2[2]})
+				return
+			end
+		end
+
+		local tail_line = edit.head[1] + #edit.new_text - 1
+		if mpos1[1] == edit.tail[1] then
+			if api.pos_relation(mpos1, edit.tail) ~= -1 then
+				-- TODO 需要修正col
+				local offset = cursor_col - edit.tail[2]
+				table.insert(need_marks, {mark[1], tail_line, mpos1[2] + offset})
+				table.insert(need_marks, {mark[2], tail_line, mpos2[2] + offset})
+				return
+			end
+		end
+	end
+
+	if tlen > 0 and marks then
+		for _, mark in ipairs(marks) do
+			check(mark)
+		end
+	end
+
+	-- TODO snippet 占位符解析
+	local new_marks = {}
+	for i, text in ipairs(edit.new_text) do
+		local ret = M.convert_to_str_item(text)
+		edit.new_text[i] = ret.str
+		for _, ph in ipairs(ret.phs) do
+			table.insert(new_marks, {start + i - 1, ph.col, ph.len})
+		end
+	end
+	
+	api.set_lines(start, tail, edit.new_text)
+
+	-- 恢复marks
+	for _, m in ipairs(need_marks) do
+		api.set_extmark(m[1], {m[2], m[3]})
+	end
+	if create_mark then
+		M.create_pos_extmarks(new_marks)
+	end
+
+	-- 返回光标 { row, col, is_snippet_pos }
+	if #new_marks == 0 then 
+		return {start + tlen - 1, cursor_col, false} 
+	end
+	return {new_marks[1][1], new_marks[1][2], true}
 end
 
 M.get_curline_marks = function(line)
@@ -170,6 +234,14 @@ M.get_curline_marks = function(line)
 	end
 
 	return cur_marks
+end
+
+M.restore_ctx = function(ctx)
+	local ctx_line = ctx.pos[1]
+	api.set_lines(ctx_line, ctx_line + 1, {ctx.typed})
+	for _, m in ipairs(ctx.marks) do
+		api.set_extmark(m.mark_id, {ctx_line, m.col})
+	end
 end
 
 return M
