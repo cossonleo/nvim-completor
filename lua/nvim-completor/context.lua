@@ -50,6 +50,10 @@ function context:can_fire_complete()
 	return semantics.is_fire_complete(typed)
 end
 
+function context:restore_ctx()
+	snippet.restore_ctx(self)
+end
+
 function context:new()
 	local ctx = {}
 	ctx.buf = api.cur_buf()

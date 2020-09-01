@@ -135,7 +135,7 @@ end
 -- edit: { new_text = {line1, line2}, head = { line, col } , tail = {line, col} }
 M.apply_edit = function(edit, create_mark)
 	local cur_buf = api.cur_buf()
-	local marks = mark_map[cur_buf]
+	local marks = mark_map[cur_buf] or {}
 	local old_marks = {}
 
 	-- 起止行号
@@ -143,34 +143,27 @@ M.apply_edit = function(edit, create_mark)
 	local tail = edit.tail[1]
 	-- 当前操作行
 	local temp = api.get_line(start)
-	--log.error(vim.fn.string(edit), vim.fn.string(temp))
 	edit.new_text[1] = temp:sub(1, edit.head[2]) .. edit.new_text[1]
 
 	local new_marks = {}
-	local get_marks = function(line, phs)
-		if not create_mark then return end
-		for _, ph in ipairs(phs) do
-			table.insert(new_marks, {line, ph.col, ph.len})
-		end
-	end
-
 	for i, text in ipairs(edit.new_text) do
 		local ret = convert_to_str_item(text)
 		edit.new_text[i] = ret.str
-		get_marks(start + i - 1, ret.phs)
+		if create_mark then
+			local line = start + i - 1
+			for _, ph in ipairs(ret.phs) do
+				table.insert(new_marks, {line, ph.col, ph.len})
+			end
+		end
 	end
 
 	local tlen = #edit.new_text
-	local cursor_col = edit.head[2]
-	if tlen > 0 then cursor_col = #edit.new_text[tlen] end
-	if edit.tail[2] > 0 then
-		if edit.head[1] ~= edit.tail[1] then temp = api.get_line(start) end
-		if tlen > 0 then
-			edit.new_text[tlen] = edit.new_text[tlen] .. temp:sub(edit.tail[2] + 1)	
-		end
-		tail = tail + 1
-	end
+	local cursor_col = #edit.new_text[tlen]
+	temp = api.get_line(tail)
+	edit.new_text[tlen] = edit.new_text[tlen] .. temp:sub(edit.tail[2] + 1)	
+	tail = tail + 1
 
+	local tail_line = edit.head[1] + #edit.new_text - 1
 	local check = function(mark)
 		local mpos1 = api.get_extmark(mark[1])
 		if #mpos1 == 0 then return end
@@ -186,7 +179,6 @@ M.apply_edit = function(edit, create_mark)
 			end
 		end
 
-		local tail_line = edit.head[1] + #edit.new_text - 1
 		if mpos1[1] == edit.tail[1] then
 			if api.pos_relation(mpos1, edit.tail) ~= -1 then
 				-- TODO 需要修正col
@@ -197,13 +189,9 @@ M.apply_edit = function(edit, create_mark)
 			end
 		end
 	end
-
-	if tlen > 0 and marks then
-		for _, mark in ipairs(marks) do
-			check(mark)
-		end
+	for _, mark in ipairs(marks) do
+		check(mark)
 	end
-
 	
 	api.set_lines(start, tail, edit.new_text)
 
