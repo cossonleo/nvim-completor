@@ -137,7 +137,7 @@ end
 M.apply_edit = function(edit, create_mark)
 	local cur_buf = api.cur_buf()
 	local marks = mark_map[cur_buf]
-	local need_marks = {}
+	local old_marks = {}
 
 	-- 起止行号
 	local start = edit.head[1]
@@ -145,6 +145,15 @@ M.apply_edit = function(edit, create_mark)
 	-- 当前操作行
 	local temp = api.get_line(start)
 	edit.new_text[1] = temp:sub(1, edit.head[2]) .. edit.new_text[1]
+
+	local new_marks = {}
+	for i, text in ipairs(edit.new_text) do
+		local ret = M.convert_to_str_item(text)
+		edit.new_text[i] = ret.str
+		for _, ph in ipairs(ret.phs) do
+			table.insert(new_marks, {start + i - 1, ph.col, ph.len})
+		end
+	end
 
 	local tlen = #edit.new_text
 	local cursor_col = edit.head[2]
@@ -166,8 +175,8 @@ M.apply_edit = function(edit, create_mark)
 
 		if mpos2[1] == edit.head[1] then
 			if api.pos_relation(mpos2, edit.head) ~= 1 then
-				table.insert(need_marks, {mark[1], mpos1[1], mpos1[2]})
-				table.insert(need_marks, {mark[2], mpos2[1], mpos2[2]})
+				table.insert(old_marks, {mark[1], mpos1[1], mpos1[2]})
+				table.insert(old_marks, {mark[2], mpos2[1], mpos2[2]})
 				return
 			end
 		end
@@ -177,8 +186,8 @@ M.apply_edit = function(edit, create_mark)
 			if api.pos_relation(mpos1, edit.tail) ~= -1 then
 				-- TODO 需要修正col
 				local offset = cursor_col - edit.tail[2]
-				table.insert(need_marks, {mark[1], tail_line, mpos1[2] + offset})
-				table.insert(need_marks, {mark[2], tail_line, mpos2[2] + offset})
+				table.insert(old_marks, {mark[1], tail_line, mpos1[2] + offset})
+				table.insert(old_marks, {mark[2], tail_line, mpos2[2] + offset})
 				return
 			end
 		end
@@ -190,20 +199,11 @@ M.apply_edit = function(edit, create_mark)
 		end
 	end
 
-	-- TODO snippet 占位符解析
-	local new_marks = {}
-	for i, text in ipairs(edit.new_text) do
-		local ret = M.convert_to_str_item(text)
-		edit.new_text[i] = ret.str
-		for _, ph in ipairs(ret.phs) do
-			table.insert(new_marks, {start + i - 1, ph.col, ph.len})
-		end
-	end
 	
 	api.set_lines(start, tail, edit.new_text)
 
 	-- 恢复marks
-	for _, m in ipairs(need_marks) do
+	for _, m in ipairs(old_marks) do
 		api.set_extmark(m[1], {m[2], m[3]})
 	end
 	if create_mark then
