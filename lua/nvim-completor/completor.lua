@@ -102,7 +102,11 @@ function complete_engine:refresh_complete(ctx)
 	local offset = cur_ctx:offset_typed(self.ctx)
 	local matches = {}
 	if offset then
-		matches = fuzzy.filter_completion_items(offset, self.complete_items)
+		-- matches = fuzzy.filter_completion_items(offset, self.complete_items)
+		local filter = offset
+		local pre = self.ctx:typed_to_cursor():match('[%w_]+$')
+		if pre and #pre > 0 then filter = pre .. filter  end
+		matches = fuzzy.head_fuzzy_match(self.complete_items, filter)
 	elseif vim.deep_equal(cur_ctx, self.ctx) then
 		matches = self.complete_items or matches
 	else

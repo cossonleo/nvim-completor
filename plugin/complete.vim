@@ -23,6 +23,7 @@ autocmd InsertLeave * lua ncp.on_insert_leave()
 "autocmd CompleteDone * lua ncp.on_complete_done()
 autocmd BufEnter * lua ncp.on_buf_enter()
 
+
 "inoremap <expr> <cr> (pumvisible() ? <C-R>=TComplete()<CR> : "\<CR>")
 inoremap <cr> <c-r>=CompleteDone()<CR>
 

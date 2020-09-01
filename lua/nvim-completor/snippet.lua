@@ -51,7 +51,7 @@ local convert_iter = function(str)
 	end
 end
 
-M.convert_to_str_item = function(str)
+local convert_to_str_item = function(str)
 	local phs = {}
 	local ret = ""
 
@@ -61,8 +61,6 @@ M.convert_to_str_item = function(str)
 		table.insert(phs, ph)
 	end
 
-	print(ret, vim.fn.string(phs))
-	print(str)
 	return {str = ret, phs = phs}
 end
 
@@ -147,12 +145,17 @@ M.apply_edit = function(edit, create_mark)
 	edit.new_text[1] = temp:sub(1, edit.head[2]) .. edit.new_text[1]
 
 	local new_marks = {}
-	for i, text in ipairs(edit.new_text) do
-		local ret = M.convert_to_str_item(text)
-		edit.new_text[i] = ret.str
-		for _, ph in ipairs(ret.phs) do
-			table.insert(new_marks, {start + i - 1, ph.col, ph.len})
+	local get_marks = function(line, phs)
+		if not create_mark then return end
+		for _, ph in ipairs(phs) do
+			table.insert(new_marks, {line, ph.col, ph.len})
 		end
+	end
+
+	for i, text in ipairs(edit.new_text) do
+		local ret = convert_to_str_item(text)
+		edit.new_text[i] = ret.str
+		get_marks(start + i - 1, ret.phs)
 	end
 
 	local tlen = #edit.new_text

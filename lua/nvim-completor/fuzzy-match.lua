@@ -195,89 +195,73 @@ module.simple_match = function(matchs, pattern)
 end
 
 -- 是否符合首字母模糊匹配
-module.is_head_match = function(str, pattern)
+module.match_and_pick_sort_str = function(str, pattern)
 	local slen = str:len()
 	local plen = pattern:len()
-	if slen < plen then
-		return 0
-	end
 
+	if slen < plen then return nil end
 	if str:sub(1,1) ~= pattern:sub(1,1) then
-		return 0
+		return nil
 	end
 
-	if plen == 1 then
-		return slen
-	end
+	if plen == 1 then return {str:sub(2)} end
 
 	local n = 2
-	local m = 46  -- 2 ^ m 	当m <= 46时是整数
-	local sum = 0 -- sum max 2 ^ 46 - 1
+	local sort_str = {}
 	for i = 2, plen, 1 do
-		if slen - n < plen - i then 
-			return 0
-		end
-
+		if slen - n < plen - i then return nil end
+		local sub_str, pc = "", pattern:sub(i, i)
 		for j = n, slen, 1 do
 			n = n + 1
-			if str:sub(j,j) == pattern:sub(i, i) then
-				if n < m + 1 then
-					sum = sum + 2 ^ (m - n + 1)
-				end
-				break
-			end
-			if j == slen then
-				return 0
-			end
-			if slen - j < plen - i then
-				return 0
-			end
+			local sc = str:sub(j,j)
+			if sc == pc then break end
+			sub_str = sub_str .. sc
+			if j == slen then return nil end
+			if slen - j < plen - i then return nil end
 		end
+		table.insert(sort_str, sub_str)
 	end
-	return sum
+	table.insert(sort_str, str:sub(n))
+	return sort_str
 end
 
 -- @items: table
 -- @pattern:
 -- return: table
 module.head_fuzzy_match = function(items, pattern)
-	if items == nil or #items == 0 then
-		return {}
-	end
 
-	if pattern:len() == 0 then
-		return items
-	end
+	if items == nil or #items == 0 then return {} end
+	if pattern:len() == 0 then return items end
 
 	--local lp = string.lower(pattern)
 	local lp = pattern
-
-	local result = {}
 	local sortArray = {}
-	for i, v in pairs(items) do
-		--local lw = string.lower(v['word'])
-		local lw = v['word']
-		local pir = module.is_head_match(lw, lp)
-		if  pir ~= 0 then
-			local j = i
-			while(result[pir] ~= nil) do
-				local p = result[pir]
-				if items[j]['word'] > items[p]['word'] then
-					result[pir] = j
-					j = p
-				end
-				pir = pir + 1
-			end
-			result[pir] = j
-			table.insert(sortArray, pir)
+	for i, v in ipairs(items) do
+		-- local word = v['word']
+		local word = v['abbr']
+		local sort_str = module.match_and_pick_sort_str(word, lp)
+		if sort_str then 
+			table.insert(sortArray, {strs = sort_str, i = i})
 		end
 	end
-	table.sort(sortArray)
-	local candicates = {}
 
-	for i = 1, #sortArray, 1 do
-		local index = result[sortArray[i]]
-		table.insert(candicates,1, items[index])
+	table.sort(sortArray, function(s1, s2) 
+		local len = #s1.strs
+		for i = 1, len, 1 do
+			local ss1, ss2 = s1.strs[i], s2.strs[i]
+			if #ss1 < #ss2 then return true end
+			if #ss1 > #ss2 then return false end
+			if ss1 < ss2 then return true end
+			if ss1 > ss2 then return false end
+		end
+		if s1.i < s2.i then return true end
+		return false
+	end)
+
+	local candicates = {}
+	for _, s in ipairs(sortArray) do
+		local index = s.i
+		table.insert(candicates, items[index])
 	end
 	return candicates
 end

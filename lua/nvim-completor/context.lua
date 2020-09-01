@@ -23,18 +23,12 @@ local context = {
 -- self 相对 ctx的偏移输入
 -- 若不是偏移输入则返回nil
 function context:offset_typed(ctx)
-	if not (self and ctx) then
-		return nil
-	end
+	if not self or not ctx then return nil end
 	if self.buf == 0  or self.buf ~= ctx.buf then
 		return nil
 	end
-	if self.pos[1] ~= ctx.pos[1] then
-		return nil
-	end
-	if ctx.pos[2] >= self.pos[2] then
-		return nil
-	end
+	if self.pos[1] ~= ctx.pos[1] then return nil end
+	if ctx.pos[2] >= self.pos[2] then return nil end
 	local front_typed = ctx:typed_to_cursor()
 	if not vim.startswith(self.typed, front_typed) then
 		return nil
