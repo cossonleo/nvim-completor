@@ -118,16 +118,42 @@ local function apply_complete_edits(ctx, on_select)
 	log.trace('apply_complete_edits', ctx, text_edits)
 	if not next(text_edits) then return end
 
-	if on_select then text_edits = {text_edits[1]} end
+	local get_edit = function(e)
+		head = {e.range.start.line; e.range.start.character};
+		tail = {e.range["end"].line; e.range["end"].character};
+		local new_text = e.newText
+
+		if not on_select then
+			return {
+				head = head;
+				tail = tail;
+				new_text = vim.split(new_text, '\n', true);
+			}
+		end
+
+		if head[1] ~= ctx_line and tail[1] ~= ctx_line then return nil end
+		if head[1] < ctx_line then
+			local temp = vim.split(e.newText, '\n', true);
+			new_text = temp[#temp]
+		elseif tail[1] > ctx_line then
+			local temp = vim.split(e.newText, '\n', true);
+			new_text = temp[1]
+		end
+
+		return {
+			head = head;
+			tail = tail;
+			new_text = {vim.fn.substitute(new_text, "\\n", "\\\\n", 'g')};
+		}
+	end
 
 	local cleaned = {}
 	for i, e in ipairs(text_edits) do
-		table.insert(cleaned, {
-			i = i;
-			head = {e.range.start.line; e.range.start.character};
-			tail = {e.range["end"].line; e.range["end"].character};
-			new_text = vim.split(e.newText, '\n', true);
-		})
+		local edit = get_edit(e)
+		if edit then
+			edit.i = i
+			table.insert(cleaned, edit)
+		end
 	end
 
 	table.sort(cleaned, edit_sort_key)

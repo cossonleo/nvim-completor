@@ -65,6 +65,7 @@ local convert_to_str_item = function(str)
 end
 
 M.create_pos_extmarks = function(phs)
+	if #phs == 0 then return end
 	local buf_id = api.cur_buf()
 	local marks = mark_map[buf_id] or {}
 	for _, ph in ipairs(phs) do
@@ -142,6 +143,7 @@ M.apply_edit = function(edit, create_mark)
 	local tail = edit.tail[1]
 	-- 当前操作行
 	local temp = api.get_line(start)
+	--log.error(vim.fn.string(edit), vim.fn.string(temp))
 	edit.new_text[1] = temp:sub(1, edit.head[2]) .. edit.new_text[1]
 
 	local new_marks = {}
@@ -209,9 +211,7 @@ M.apply_edit = function(edit, create_mark)
 	for _, m in ipairs(old_marks) do
 		api.set_extmark(m[1], {m[2], m[3]})
 	end
-	if create_mark then
-		M.create_pos_extmarks(new_marks)
-	end
+	M.create_pos_extmarks(new_marks)
 
 	-- 返回光标 { row, col, is_snippet_pos }
 	if #new_marks == 0 then 
