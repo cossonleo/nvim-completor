@@ -84,7 +84,7 @@ M.jump_to_next_pos = function(pos)
 	local cur_pos = pos or api.cur_pos()
 
 	log.debug("marks:", mark_map)
-	local marks = mark_map[buf_id]
+	local marks = mark_map[buf_id] or {}
 	local del_marks = {}
 	local next_pos = nil
 
