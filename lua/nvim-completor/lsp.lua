@@ -135,15 +135,19 @@ local function apply_complete_edits(ctx, on_select)
 		if head[1] < ctx_line then
 			local temp = vim.split(e.newText, '\n', true);
 			new_text = temp[#temp]
+			head = {ctx_line, 0}
 		elseif tail[1] > ctx_line then
 			local temp = vim.split(e.newText, '\n', true);
 			new_text = temp[1]
+			tail = {ctx_line + 1, 0}
+		else
+			new_text = vim.fn.substitute(new_text, "\\n", "\\\\n", 'g');
 		end
 
 		return {
 			head = head;
 			tail = tail;
-			new_text = {vim.fn.substitute(new_text, "\\n", "\\\\n", 'g')};
+			new_text = {new_text}
 		}
 	end
 
