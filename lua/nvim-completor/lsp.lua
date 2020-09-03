@@ -165,7 +165,7 @@ local function apply_complete_edits(ctx, on_select)
 	local cursor = nil
 	for i = #cleaned, 1, -1 do
 		local e = cleaned[i]
-		local temp_cursor = snippet.apply_edit(e, not on_select)
+		local temp_cursor = snippet.apply_edit(ctx, e, not on_select)
 		if not cursor then cursor = temp_cursor end
 		if temp_cursor[3] then 
 			cursor = temp_cursor 

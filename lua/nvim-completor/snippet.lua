@@ -173,7 +173,7 @@ M.jump_to_next_pos = function(pos)
 end
 
 -- edit: { new_text = {line1, line2}, head = { line, col } , tail = {line, col} }
-M.apply_edit = function(edit, create_mark)
+M.apply_edit = function(ctx, edit, create_mark)
 	local cur_buf = api.cur_buf()
 	local marks = mark_map[cur_buf] or {}
 	local old_marks = {}
@@ -182,7 +182,10 @@ M.apply_edit = function(edit, create_mark)
 	local start = edit.head[1]
 	local tail = edit.tail[1]
 	-- 当前操作行
-	local temp = api.get_line(start)
+	local temp = ctx.typed
+	if ctx.pos[1] ~= start then
+		temp = api.get_line(start)
+	end
 	edit.new_text[1] = temp:sub(1, edit.head[2]) .. edit.new_text[1]
 
 	local new_marks = {}
@@ -199,7 +202,11 @@ M.apply_edit = function(edit, create_mark)
 
 	local tlen = #edit.new_text
 	local cursor_col = #edit.new_text[tlen]
-	temp = api.get_line(tail)
+
+	temp = ctx.typed
+	if ctx.pos[1] ~= tail then
+		temp = api.get_line(tail)
+	end
 	edit.new_text[tlen] = edit.new_text[tlen] .. temp:sub(edit.tail[2] + 1)	
 	tail = tail + 1
 
