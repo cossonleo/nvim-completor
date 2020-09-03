@@ -200,7 +200,7 @@ module.apply_complete_user_edit = function(data, on_select)
 		return
 	end
 	
-	snippet.restore_ctx(user_data)
+	-- snippet.restore_ctx(user_data)
 	apply_complete_edits(user_data, on_select)
 end
 
