@@ -3,7 +3,7 @@ local log = require("nvim-completor/log")
 local api = require("nvim-completor/api")
 
 -----
--- TODO 封装1-based api 到 0-based api
+-- 使用vim.regex进行正则匹配
 -----
 
 local M = {}
@@ -86,11 +86,14 @@ M.jump_to_next_pos = function(pos)
 	log.debug("marks:", mark_map)
 	local marks = mark_map[buf_id] or {}
 	local del_marks = {}
-	local next_pos = nil
 
+	local next = 0
+	local pos_buf = {}
 	local check = function(i, mark)
 		local pos1 = api.get_extmark(mark[1])
 		local pos2 = api.get_extmark(mark[2])
+		table.insert(pos_buf, i, {pos1, pos2})
+
 		log.debug(cur_pos, pos1, pos2)
 		if api.pos_relation(pos1, pos2) ~= -1 then
 			table.insert(del_marks, i)
@@ -104,32 +107,69 @@ M.jump_to_next_pos = function(pos)
 			return
 		end
 
+		if next == 0 then next = i; return end
+		local next_pos = pos_buf[next]
+
 		-- TODO: 是否做更全面的位置关系判断， 包含， 交叉等关系
-		if next_pos and api.pos_relation(next_pos.pos2, pos2) == -1 then
+		if api.pos_relation(next_pos[2], pos2) == -1 then
 			return
 		end
+		next = i
 
-		next_pos = {i = i, pos1 = pos1, pos2 = pos2, m1 = mark[1], m2 = mark[2]}
+		-- next_pos = {i = i, pos1 = pos1, pos2 = pos2, m1 = mark[1], m2 = mark[2]}
 	end
 
 	for i, mark in ipairs(marks) do
 		check(i, mark)
 	end
 
-	if next_pos then table.insert(del_marks, next_pos.i) end
+	if next then table.insert(del_marks, next) end
 	table.sort(del_marks, function(i1, i2) return i1 > i2 end)
-	for _, i in ipairs(del_marks) do
-		table.remove(marks, i)
-	end
-	mark_map[buf_id] = marks
 
-	if next_pos == nil then return end
-	local pos1 ,pos2 = next_pos.pos1, next_pos.pos2
-	api.del_marks({next_pos.m1, next_pos.m2})
+	local remove_marks = function()
+		for _, i in ipairs(del_marks) do
+			table.remove(marks, i)
+		end
+		mark_map[buf_id] = marks
+	end
+
+	local del_contain = function(n)
+		for _, d in ipairs(del_marks) do
+			if d == n then return true end
+		end
+		return false
+	end
+
+	if next == 0 then remove_marks(); return end
+
+	local pos1 ,pos2 = pos_buf[next][1], pos_buf[next][2]
+	api.del_marks({marks[next][1], marks[next][2]})
+
+	local line = api.get_line(pos1[1])
+	line = line:sub(1, pos1[2]) .. line:sub(pos2[2] + 1)
+	api.set_lines(pos1[1], pos1[1] + 1, {line})
 	api.set_cursor(pos1)
-	local len = pos2[2] - pos1[2]
-	local cmd = "<c-o>v" .. len - 1 .. "ld"
-	vim.api.nvim_input(cmd)
+
+	for i, pb in ipairs(pos_buf) do
+		local pb1, pb2 = pb[1], pb[2]
+		local m1, m2 = marks[i][1], marks[i][2]
+		local reduce = pos2[2] - pos1[2]
+		if i ~= next and 
+			pb1[1] == pos1[1] and 
+			not del_contain(i) then
+
+			if pb1[2] >= pos2[2] then
+				pb1[2] = pb1[2] - reduce
+				pb2[2] = pb2[2] - reduce
+			end
+			log.error(pb1)
+			log.error(pb2)
+			api.set_extmark(m1, pb1)
+			api.set_extmark(m2, pb2)
+		end
+	end
+
+	remove_marks()
 end
 
 -- edit: { new_text = {line1, line2}, head = { line, col } , tail = {line, col} }

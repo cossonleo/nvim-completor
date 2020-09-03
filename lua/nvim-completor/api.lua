@@ -24,7 +24,12 @@ M.cur_line = function()
 end
 
 M.get_line = function(line)
-	return vim.fn.getline(line + 1)
+	local lines = vapi.nvim_buf_get_lines(0, line, line + 1, false)
+	if #lines == 0 then
+		log.error("get buf line err line:", line)
+		return ""
+	end
+	return lines[1]
 end
 
 -- 你啊
