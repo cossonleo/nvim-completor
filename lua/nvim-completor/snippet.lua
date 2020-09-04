@@ -162,8 +162,6 @@ M.jump_to_next_pos = function(pos)
 				pb1[2] = pb1[2] - reduce
 				pb2[2] = pb2[2] - reduce
 			end
-			log.error(pb1)
-			log.error(pb2)
 			api.set_extmark(m1, pb1)
 			api.set_extmark(m2, pb2)
 		end

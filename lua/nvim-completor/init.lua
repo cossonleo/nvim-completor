@@ -53,6 +53,7 @@ module.on_text_changed_p = function()
 			log.trace("on select item")
 			return
 		elseif module.last_selected ~= -1 then
+			module.last_selected = -1
 			module.ctx:restore_ctx()
 			log.trace("on select item with not selected")
 			return

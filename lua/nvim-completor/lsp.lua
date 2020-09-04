@@ -53,17 +53,28 @@ local function lsp2vim_item(ctx, complete_item)
 		apply_text.edits = fix_edits_col(ctx, raw_edits)
 		apply_text.marks = ctx.marks
 		user_data = apply_text
-		word = complete_item.textEdit and complete_item.textEdit.newText
-	else
-		word = complete_item.insertText or complete_item.label
-		-- lua lsp 出现重复前部 若其他lsp server出现其他情况， 则需要加判断
-		local trigger_str = ctx:typed_to_cursor():match('[%w_]+$')
-		if trigger_str and vim.startswith(word, trigger_str) then
-			word = word:sub(#trigger_str + 1)
-		end
-		-- abbr = ctx:typed_to_cursor():match('[%w_]*$') .. abbr
-	--else
-	--	word = complete_item.insertText
+		--word = complete_item.textEdit and complete_item.textEdit.newText
+		-- word = complete_item.insertText or complete_item.label
+--	else
+--		word = complete_item.insertText or complete_item.label
+--		-- lua lsp 出现重复前部 若其他lsp server出现其他情况， 则需要加判断
+--		local trigger_str = ctx:typed_to_cursor():match('[%w_]+$')
+--		if trigger_str and vim.startswith(word, trigger_str) then
+--			word = word:sub(#trigger_str + 1)
+--		end
+--		-- abbr = ctx:typed_to_cursor():match('[%w_]*$') .. abbr
+--	--else
+--	--	word = complete_item.insertText
+	end
+
+	-- 有textEdit, 也不用在word中， 
+	-- 当textEdit中的文本特别长时，
+	-- 会影响nvim popmenu select的性能
+	word = complete_item.insertText or complete_item.label
+	-- lua lsp 出现重复前部 若其他lsp server出现其他情况， 则需要加判断
+	local trigger_str = ctx:typed_to_cursor():match('[%w_]+$')
+	if trigger_str and vim.startswith(word, trigger_str) then
+		word = word:sub(#trigger_str + 1)
 	end
 
 	local info = ' '
