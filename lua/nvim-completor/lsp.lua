@@ -177,9 +177,7 @@ local function apply_complete_edits(ctx, on_select)
 	for i = #cleaned, 1, -1 do
 		snippet.apply_edit(ctx, cleaned[i], not on_select)
 	end
-	if not on_select then
-		snippet.jump_to_next_pos(cleaned[1].head)
-	end
+	snippet.jump_to_next_pos(cleaned[1].head)
 end
 
 module.lsp_items2vim = function(ctx, data)

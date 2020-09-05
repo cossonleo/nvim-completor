@@ -9,7 +9,7 @@ local api = require("nvim-completor/api")
 local M = {}
 
 -- [start_mark_id, end_mark_id)
--- { buf_id = {start_mark_id, end_mark_id}, {start_mark_id, end_mark_id} }
+-- { buf_id = {mark1, mark2, ...} } 
 local mark_map = {}
 local default_mark = 0
 
@@ -65,16 +65,15 @@ local convert_to_str_item = function(str)
 	return {str = ret, phs = phs}
 end
 
-M.create_pos_extmarks = function(phs)
+M.create_pos_extmarks = function(buf, phs)
 	if #phs == 0 then return end
-	local buf_id = api.cur_buf()
-	local marks = mark_map[buf_id] or {}
+	local marks = mark_map[buf] or {}
 	for _, ph in ipairs(phs) do
 		local mark_id = api.set_extmark(0, ph, {ph[1], ph[2] + ph[3]})
 		table.insert(marks, mark_id)
 	end
 
-	mark_map[buf_id] = marks
+	mark_map[buf] = marks
 	log.debug("marks: ", vim.fn.string(marks))
 end
 
@@ -96,6 +95,7 @@ M.jump_to_next_pos = function(pos)
 			return
 		end
 	end
+	default_mark = 0
 
 	local next = 0
 	local pos_buf = {}
@@ -217,33 +217,37 @@ M.apply_edit = function(ctx, edit, create_mark)
 	-- if ctx.pos[1] ~= tail then
 	-- 	temp = api.get_line(tail)
 	-- end
-	temp = api.get_line(tail)
-	edit.new_text[tlen] = edit.new_text[tlen] .. temp:sub(edit.tail[2] + 1)	
-	tail = tail + 1
+	if cursor_col == 0 and edit.tail[2] == 0 then
+		table.remove(edit.new_text, tlen)
+		tlen = tlen - 1
+		cursor_col = #edit.new_text[tlen]
+	else
+		temp = api.get_line(tail)
+		edit.new_text[tlen] = edit.new_text[tlen] .. temp:sub(edit.tail[2] + 1)	
+		tail = tail + 1
+	end
 
 	local tail_line = edit.head[1] + #edit.new_text - 1
 	local check = function(mark)
 		local mpos = api.get_extmark(mark)
-		if #mpos < 2 then return end
+		if #mpos == 0 then return end
 
 		local mpos1, mpos2 = mpos[1], mpos[2]
-		if mpos2[1] == edit.head[1] then
-			if api.pos_relation(mpos2, edit.head) ~= 1 then
-				table.insert(old_marks, {mark, mpos1, mpos2})
-				return
-			end
+		if mpos1[1] == edit.tail[1] and api.pos_relation(mpos1, edit.tail) ~= -1 then
+			local offset = cursor_col - edit.tail[2]
+			mpos1 = {tail_line, mpos1[2] + offset}
+			mpos2 = mpos2 and {tail_line, mpos2[2] + offset}
+			table.insert(old_marks, {mark, mpos1, mpos2})
+			return
 		end
 
-		if mpos1[1] == edit.tail[1] then
-			if api.pos_relation(mpos1, edit.tail) ~= -1 then
-				local offset = cursor_col - edit.tail[2]
-				mpos1 = {tail_line, mpos1[2] + offset}
-				mpos2 = {tail_line, mpos2[2] + offset}
-				table.insert(old_marks, {mark, mpos1, mpos2})
-				return
-			end
+		if mpos1[1] == edit.head[1] and api.pos_relation(mpos1, edit.head) == -1 then
+			table.insert(old_marks, {mark, mpos1, mpos2})
+			return
 		end
 	end
+
+	if default_mark > 0 then check(default_mark) end
 	for _, mark in ipairs(marks) do
 		check(mark)
 	end
@@ -254,14 +258,17 @@ M.apply_edit = function(ctx, edit, create_mark)
 	for _, m in ipairs(old_marks) do
 		api.set_extmark(m[1], m[2], m[3])
 	end
-	M.create_pos_extmarks(new_marks)
+	M.create_pos_extmarks(cur_buf, new_marks)
 
-	if not create_mark then
-		api.set_cursor({start + tlen - 1, cursor_col})
-		return
-	end
-	if default_mark == 0 and #new_marks == 0 then
-		default_mark = api.set_extmark(0, {start + tlen - 1, cursor_col})
+	if #new_marks == 0 then
+		if default_mark == 0 then
+			default_mark = api.set_extmark(0, {start + tlen - 1, cursor_col})
+		end
+	else
+		if default_mark > 0 then
+			api.del_extmark(default_mark)
+		end
+		default_mark = -1
 	end
 end
 
