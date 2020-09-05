@@ -11,6 +11,8 @@ if exists('g:nvim_completor_load')
 endif
 let g:nvim_completor_load = 1
 
+hi link SnippetHl Comment
+
 lua ncp = require('nvim-completor')
 lua ncp.on_load()
 lua ncp.set_log_level(4)

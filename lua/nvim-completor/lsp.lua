@@ -175,17 +175,10 @@ local function apply_complete_edits(ctx, on_select)
 
 	local cursor = nil
 	for i = #cleaned, 1, -1 do
-		local e = cleaned[i]
-		local temp_cursor = snippet.apply_edit(ctx, e, not on_select)
-		if not cursor then cursor = temp_cursor end
-		if temp_cursor[3] then 
-			cursor = temp_cursor 
-		end
+		snippet.apply_edit(ctx, cleaned[i], not on_select)
 	end
-	if cursor[3] and not on_select then
-		snippet.jump_to_next_pos(cursor)
-	else
-		api.set_cursor(cursor)
+	if not on_select then
+		snippet.jump_to_next_pos(cleaned[1].head)
 	end
 end
 
@@ -211,7 +204,7 @@ module.apply_complete_user_edit = function(data, on_select)
 		return
 	end
 	
-	-- snippet.restore_ctx(user_data)
+	snippet.restore_ctx(user_data)
 	apply_complete_edits(user_data, on_select)
 end
 

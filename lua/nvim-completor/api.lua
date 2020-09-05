@@ -45,13 +45,32 @@ M.set_cursor = function(pos)
 	vapi.nvim_win_set_cursor(0, {pos[1] + 1, pos[2]})
 end
 
-M.set_extmark = function(mark_id, pos)
-	local mid = vapi.nvim_buf_set_extmark(0, mark_ns, mark_id, pos[1], pos[2], {})
+M.set_extmark = function(mark_id, head, tail)
+	local opt = {}
+	if mark_id > 0 then
+		opt.id = mark_id
+	end
+	if tail and #tail == 2 then
+		opt.end_line = tail[1]
+		opt.end_col = tail[2]
+		opt.hl_group = "SnippetHl"
+	end
+	local mid = vapi.nvim_buf_set_extmark( 0, mark_ns, head[1], head[2], opt)
 	return mid
 end
 
 M.get_extmark = function(mark)
-	return vapi.nvim_buf_get_extmark_by_id(0, mark_ns, mark)
+	local details = vapi.nvim_buf_get_extmark_by_id(0, mark_ns, mark, { details = true })
+	if #details == 0 then
+		return {}
+	end
+
+	local head = {details[1], details[2]}
+	local d3 = details[3]
+	if d3.end_col <= head[2] then
+		return {head}
+	end
+	return {head, {d3.end_row, d3.end_col}}
 end
 
 -- -1 前面
@@ -65,12 +84,10 @@ M.pos_relation = function(A, B)
 	return 0
 end
 
-M.del_marks = function(marks)
-	if marks == nil then return end
+M.del_extmark = function(mark)
+	if mark == 0 then return end
 	local buf_id = M.cur_buf()
-	for _, mark in ipairs(marks) do
-		vapi.nvim_buf_del_extmark(buf_id, mark_ns, mark)
-	end
+	vapi.nvim_buf_del_extmark(buf_id, mark_ns, mark)
 end
 
 M.complete = function(pos, items)

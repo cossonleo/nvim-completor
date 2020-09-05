@@ -11,6 +11,7 @@ local M = {}
 -- [start_mark_id, end_mark_id)
 -- { buf_id = {start_mark_id, end_mark_id}, {start_mark_id, end_mark_id} }
 local mark_map = {}
+local default_mark = 0
 
 local convert_step = function(str)
 	local s = str:find("%$")
@@ -69,9 +70,8 @@ M.create_pos_extmarks = function(phs)
 	local buf_id = api.cur_buf()
 	local marks = mark_map[buf_id] or {}
 	for _, ph in ipairs(phs) do
-		local start_mark_id = api.set_extmark(0, ph)
-		local end_mark_id = api.set_extmark(0, {ph[1], ph[2] + ph[3]})
-		table.insert(marks, {start_mark_id, end_mark_id})
+		local mark_id = api.set_extmark(0, ph, {ph[1], ph[2] + ph[3]})
+		table.insert(marks, mark_id)
 	end
 
 	mark_map[buf_id] = marks
@@ -87,23 +87,33 @@ M.jump_to_next_pos = function(pos)
 	local marks = mark_map[buf_id] or {}
 	local del_marks = {}
 
+	if default_mark > 0 then
+		local pos = api.get_extmark(default_mark)
+		default_mark = 0
+		if #pos > 0 then
+			api.set_cursor(pos[1])
+			api.del_extmark(default_mark)
+			return
+		end
+	end
+
 	local next = 0
 	local pos_buf = {}
 	local check = function(i, mark)
-		local pos1 = api.get_extmark(mark[1])
-		local pos2 = api.get_extmark(mark[2])
-		table.insert(pos_buf, i, {pos1, pos2})
+		local pos_range = api.get_extmark(mark)
+		table.insert(pos_buf, i, pos_range)
 
-		log.debug(cur_pos, pos1, pos2)
-		if api.pos_relation(pos1, pos2) ~= -1 then
+		log.debug(cur_pos, pos_range)
+		if #pos_range < 2 then 
 			table.insert(del_marks, i)
-			api.del_marks(mark)
+			api.del_extmark(mark)
 			return
 		end
 
+		local pos2 = pos_range[2]
 		if api.pos_relation(cur_pos, pos2) ~= -1 then
 			table.insert(del_marks, i)
-			api.del_marks(mark)
+			api.del_extmark(mark)
 			return
 		end
 
@@ -133,7 +143,7 @@ M.jump_to_next_pos = function(pos)
 		mark_map[buf_id] = marks
 	end
 
-	local del_contain = function(n)
+	local contain_del = function(n)
 		for _, d in ipairs(del_marks) do
 			if d == n then return true end
 		end
@@ -143,7 +153,7 @@ M.jump_to_next_pos = function(pos)
 	if next == 0 then remove_marks(); return end
 
 	local pos1 ,pos2 = pos_buf[next][1], pos_buf[next][2]
-	api.del_marks({marks[next][1], marks[next][2]})
+	api.del_extmark(marks[next])
 
 	local line = api.get_line(pos1[1])
 	line = line:sub(1, pos1[2]) .. line:sub(pos2[2] + 1)
@@ -152,18 +162,17 @@ M.jump_to_next_pos = function(pos)
 
 	for i, pb in ipairs(pos_buf) do
 		local pb1, pb2 = pb[1], pb[2]
-		local m1, m2 = marks[i][1], marks[i][2]
+		local mark = marks[i]
 		local reduce = pos2[2] - pos1[2]
 		if i ~= next and 
 			pb1[1] == pos1[1] and 
-			not del_contain(i) then
+			not contain_del(i) then
 
 			if pb1[2] >= pos2[2] then
 				pb1[2] = pb1[2] - reduce
 				pb2[2] = pb2[2] - reduce
 			end
-			api.set_extmark(m1, pb1)
-			api.set_extmark(m2, pb2)
+			api.set_extmark(mark, pb1, pb2)
 		end
 	end
 
@@ -180,10 +189,12 @@ M.apply_edit = function(ctx, edit, create_mark)
 	local start = edit.head[1]
 	local tail = edit.tail[1]
 	-- 当前操作行
-	local temp = ctx.typed
-	if ctx.pos[1] ~= start then
-		temp = api.get_line(start)
-	end
+	-- 第二次进来的时候， 就不准确了， 除非更新ctx.typed
+	--local temp = ctx.typed
+	--if ctx.pos[1] ~= start then
+	--	temp = api.get_line(start)
+	--end
+	temp = api.get_line(start)
 	edit.new_text[1] = temp:sub(1, edit.head[2]) .. edit.new_text[1]
 
 	local new_marks = {}
@@ -201,35 +212,34 @@ M.apply_edit = function(ctx, edit, create_mark)
 	local tlen = #edit.new_text
 	local cursor_col = #edit.new_text[tlen]
 
-	temp = ctx.typed
-	if ctx.pos[1] ~= tail then
-		temp = api.get_line(tail)
-	end
+	-- 第二次进来的时候， 就不准确了， 除非更新ctx.typed
+	-- temp = ctx.typed
+	-- if ctx.pos[1] ~= tail then
+	-- 	temp = api.get_line(tail)
+	-- end
+	temp = api.get_line(tail)
 	edit.new_text[tlen] = edit.new_text[tlen] .. temp:sub(edit.tail[2] + 1)	
 	tail = tail + 1
 
 	local tail_line = edit.head[1] + #edit.new_text - 1
 	local check = function(mark)
-		local mpos1 = api.get_extmark(mark[1])
-		if #mpos1 == 0 then return end
-		local mpos2 = api.get_extmark(mark[2])
-		if #mpos2 == 0 then return end
-		if mpos2[2] == 0 then return end
+		local mpos = api.get_extmark(mark)
+		if #mpos < 2 then return end
 
+		local mpos1, mpos2 = mpos[1], mpos[2]
 		if mpos2[1] == edit.head[1] then
 			if api.pos_relation(mpos2, edit.head) ~= 1 then
-				table.insert(old_marks, {mark[1], mpos1[1], mpos1[2]})
-				table.insert(old_marks, {mark[2], mpos2[1], mpos2[2]})
+				table.insert(old_marks, {mark, mpos1, mpos2})
 				return
 			end
 		end
 
 		if mpos1[1] == edit.tail[1] then
 			if api.pos_relation(mpos1, edit.tail) ~= -1 then
-				-- TODO 需要修正col
 				local offset = cursor_col - edit.tail[2]
-				table.insert(old_marks, {mark[1], tail_line, mpos1[2] + offset})
-				table.insert(old_marks, {mark[2], tail_line, mpos2[2] + offset})
+				mpos1 = {tail_line, mpos1[2] + offset}
+				mpos2 = {tail_line, mpos2[2] + offset}
+				table.insert(old_marks, {mark, mpos1, mpos2})
 				return
 			end
 		end
@@ -242,15 +252,17 @@ M.apply_edit = function(ctx, edit, create_mark)
 
 	-- 恢复marks
 	for _, m in ipairs(old_marks) do
-		api.set_extmark(m[1], {m[2], m[3]})
+		api.set_extmark(m[1], m[2], m[3])
 	end
 	M.create_pos_extmarks(new_marks)
 
-	-- 返回光标 { row, col, is_snippet_pos }
-	if #new_marks == 0 then 
-		return {start + tlen - 1, cursor_col, false} 
+	if not create_mark then
+		api.set_cursor({start + tlen - 1, cursor_col})
+		return
 	end
-	return {new_marks[1][1], new_marks[1][2], true}
+	if default_mark == 0 and #new_marks == 0 then
+		default_mark = api.set_extmark(0, {start + tlen - 1, cursor_col})
+	end
 end
 
 M.get_curline_marks = function(line)
@@ -261,11 +273,9 @@ M.get_curline_marks = function(line)
 	-- {{ mark_id = xx, col = xx }}
 	local cur_marks = {}
 	for _, mark in ipairs(marks) do
-		local pos1 = api.get_extmark(mark[1])
-		local pos2 = api.get_extmark(mark[2])
-		if pos1[1] == line then
-			table.insert(cur_marks, {mark_id = mark[1], col = pos1[2]})
-			table.insert(cur_marks, {mark_id = mark[2], col = pos2[2]})
+		local pos = api.get_extmark(mark)
+		if #pos > 0 and pos[1][1] == line then
+			table.insert(cur_marks, {mark_id = mark, range = pos})
 		end
 	end
 
@@ -276,7 +286,7 @@ M.restore_ctx = function(ctx)
 	local ctx_line = ctx.pos[1]
 	api.set_lines(ctx_line, ctx_line + 1, {ctx.typed})
 	for _, m in ipairs(ctx.marks) do
-		api.set_extmark(m.mark_id, {ctx_line, m.col})
+		api.set_extmark(m.mark_id, m.range[1], m.range[2])
 	end
 end
 
