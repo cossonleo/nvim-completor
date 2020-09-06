@@ -17,25 +17,24 @@ local log = require('nvim-completor/log')
 local ncp_lsp = require("nvim-completor/lsp")
 local snippet = require("nvim-completor/snippet")
 
-module.ctx = nil
-module.last_selected = -1
+_ctx = nil
+_last_selected = -1
 
 local function reset()
-	module.ctx = nil
-	module.last_selected = -1
+	_ctx = nil
+	_last_selected = -1
 	completor.reset()
 end
 
 local function text_changed()
-	local cur_ctx = context:new()
-	if module.ctx and vim.deep_equal(module.ctx, cur_ctx) then
-		log.trace("repeat trigger text changed")
-		return
+	if _ctx and _ctx.changedtick == vim.b.changedtick then
+	 	log.trace("repeat trigger text changed")
+	 	return
 	end
 
-	module.ctx = cur_ctx
-	module.last_selected = -1
-	completor.text_changed(module.ctx)
+	_ctx = context:new()
+	_last_selected = -1
+	completor.text_changed(_ctx)
 end
 
 module.on_text_changed_i = function()
@@ -49,12 +48,12 @@ module.on_text_changed_p = function()
 	if complete_info.pum_visible then
 		if complete_info.selected ~= -1 then
 			module.on_select_item()
-			module.last_selected = 1
+			_last_selected = 1
 			log.trace("on select item")
 			return
-		elseif module.last_selected ~= -1 then
-			module.last_selected = -1
-			module.ctx:restore_ctx()
+		elseif _last_selected ~= -1 then
+			_last_selected = -1
+			_ctx:restore_ctx()
 			log.trace("on select item with not selected")
 			return
 		end
@@ -65,7 +64,7 @@ end
 
 module.on_complete_done = function()
 	log.trace("on complete done")
-	local complete_item = api.nvim_get_vvar('completed_item')
+	local complete_item = vim.v.completed_item
 	if type(complete_item) ~= "table" or vim.tbl_isempty(complete_item) then
 		return
 	end

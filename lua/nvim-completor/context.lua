@@ -13,14 +13,12 @@ local api = require("nvim-completor/api")
 
 -- position_param = {}
 local context = {
-	ctx_id = 0,
+	changedtick = 0,
 	buf = 0,
 	pos = {},
 	typed = "",
 	marks = {},
 }
-
-local ctx_id = 0
 
 -- self > ctx
 -- self 相对 ctx的偏移输入
@@ -57,14 +55,9 @@ function context:restore_ctx()
 	snippet.restore_ctx(self)
 end
 
-function context:init_ctx_id()
-	ctx_id = ctx_id + 1
-	self.ctx_id = ctx_id
-end
-
 function context:new()
 	local ctx = {}
-	ctx.ctx_id = 0
+	ctx.changedtick = vim.b.changedtick
 	ctx.buf = api.cur_buf()
 	ctx.typed = api.cur_line()
 	ctx.pos = api.cur_pos()
