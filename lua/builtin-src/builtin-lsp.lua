@@ -3,7 +3,6 @@ local log = require('nvim-completor/log')
 local manager = require("nvim-completor/src-manager")
 local completor = require("nvim-completor/completor")
 local ncp_lsp = require("nvim-completor/lsp")
-local semantics = require("nvim-completor/semantics")
 
 local private = {}
 

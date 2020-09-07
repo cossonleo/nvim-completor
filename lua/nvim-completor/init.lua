@@ -10,20 +10,20 @@
 local module = {}
 local api = vim.api
 local vimfn = vim.fn
-local semantics = require('nvim-completor/semantics')
 local context = require('nvim-completor/context')
-local completor = require('nvim-completor/completor')
 local log = require('nvim-completor/log')
 local ncp_lsp = require("nvim-completor/lsp")
 local snippet = require("nvim-completor/snippet")
 
-_ctx = nil
-_last_selected = -1
+local _completor = require('nvim-completor/completor')
+
+local _ctx = nil
+local _last_selected = -1
 
 local function reset()
 	_ctx = nil
 	_last_selected = -1
-	completor.reset()
+	_completor.reset()
 end
 
 local function text_changed()
@@ -32,9 +32,9 @@ local function text_changed()
 	 	return
 	end
 
-	_ctx = context:new()
+	_ctx = context.new()
 	_last_selected = -1
-	completor.text_changed(_ctx)
+	_completor.text_changed(_ctx)
 end
 
 module.on_text_changed_i = function()
@@ -84,7 +84,6 @@ end
 module.on_insert = function()
 	log.trace("on insert")
 	local ft = api.nvim_buf_get_option(0, 'filetype')
-	semantics.set_ft(ft)
 	text_changed()
 end
 
@@ -95,9 +94,6 @@ module.on_insert_leave = function()
 end
 
 module.on_buf_enter = function()
-	--log.trace("on buf enter")
-	--local ft = api.nvim_buf_get_option(0, 'filetype')
-	--semantics.set_ft(ft)
 end
 
 module.on_load = function()

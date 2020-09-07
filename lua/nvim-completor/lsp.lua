@@ -7,7 +7,6 @@
 --			 Desc: lsp parse
 --------------------------------------------------
 
--- local semantics = require("nvim-completor/semantics")
 local protocol = require('vim.lsp.protocol')
 local log = require("nvim-completor/log")
 local snippet = require("nvim-completor/snippet")

@@ -98,7 +98,7 @@ end
 
 function complete_engine:refresh_complete(ctx)
 	log.trace("complete engine refresh complete")
-	local cur_ctx = ctx or context:new()
+	local cur_ctx = ctx or context.new()
 	local offset = cur_ctx:offset_typed(self.ctx)
 	local matches = {}
 	if offset then

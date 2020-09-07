@@ -7,7 +7,6 @@
 --       Desc: core of complete framework
 --------------------------------------------------
 
-local semantics = require("nvim-completor/semantics")
 local log = require("nvim-completor/log")
 
 local complete_src = {
@@ -26,8 +25,9 @@ function complete_src:add_src(ident, handle, kind)
 end
 
 function complete_src:has_complete_src()
-	local cur_ft = semantics.get_ft()
-	return self.public or self[cur_ft]
+	if self.public then return true end
+	local cur_ft = vim.bo.filetype
+	return self[cur_ft] and true or false
 end
 
 function complete_src:call_src(ctx, idents)
@@ -40,7 +40,7 @@ function complete_src:call_src(ctx, idents)
 		end
 	end
 
-	local cur_ft = semantics.get_ft()
+	local cur_ft = vim.bo.filetype
 	local handles = self[cur_ft] or {}
 	for k, handle in pairs(handles) do
 		if not idents or vim.tbl_contains(idents, k) then
