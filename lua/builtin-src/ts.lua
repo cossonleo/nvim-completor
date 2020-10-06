@@ -47,7 +47,6 @@ local function prepare_match(match, kind)
 			vim.list_extend(matches, prepare_match(item, name))
 		end
 	end
-
 	return matches 
 end
 
@@ -77,8 +76,10 @@ local function get_complete_items(bufnr, line_current, prefix)
 					table.insert(complete_items, {
 						word = node_text:sub(#prefix + 1),
 						abbr = node_text,
-						kind = "[TS " .. match.kind .. "]",
-						menu = full_text,
+						menu = "TS",
+						kind = match.kind,
+						--menu = full_text,
+						info = full_text,
 						score = score,
 						icase = 1,
 						dup = 0,
@@ -148,5 +149,5 @@ local function request(ctx)
 	--local items = get_complete_items(ctx.buf, ctx.pos[1], prefix)
 end
 
-manager:add_src("ts_complete", request)
-log.info("add treesitter complete source finish")
+--manager:add_src("ts_complete", request)
+--log.info("add treesitter complete source finish")
